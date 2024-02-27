@@ -66,7 +66,6 @@ func NewRollingWindow(size int) *RollingWindow {
 		ring:     NewRing(slotCount),
 		size:     slotCount,
 		interval: DefaultRollingWindowSlotInterval,
-		// ignoreCurrent: ignore,
 		lock:     sync.Mutex{},
 		runing:   true,
 		once:     sync.Once{},
