@@ -86,7 +86,7 @@ func TestRollingWindow_Sum(t *testing.T) {
 	expectedSum := 1.0 + 2.0 + 3.0 + 4.0 + 5.0
 
 	// Call the Sum method.
-	sum, err := rw.Sum()
+	sum, _, err := rw.Sum()
 	assert.NoError(t, err, "Unexpected error")
 
 	// Print the slots.
@@ -121,7 +121,7 @@ func TestRollingWindow_SumWithIdleSleep(t *testing.T) {
 	expectedSum := 1.0 + 2.0 + 3.0 + 4.0 + 5.0
 
 	// Call the Sum method.
-	sum, err := rw.Sum()
+	sum, _, err := rw.Sum()
 	assert.NoError(t, err, "Unexpected error")
 
 	// Print the slots.
@@ -156,7 +156,7 @@ func TestRollingWindow_SumWithSmallWindow(t *testing.T) {
 	expectedSum := 18.0
 
 	// Call the Sum method.
-	sum, err := rw.Sum()
+	sum, _, err := rw.Sum()
 	assert.NoError(t, err, "Unexpected error")
 
 	// Print the slots.
@@ -185,7 +185,7 @@ func TestRollingWindow_Avg(t *testing.T) {
 	}
 
 	// Call the Avg method.
-	avg, err := rw.Avg()
+	avg, _, err := rw.Avg()
 	assert.NoError(t, err, "Unexpected error")
 
 	// Print the slots.
@@ -220,7 +220,7 @@ func TestRollingWindow_AvgWithIdleSleep(t *testing.T) {
 	}
 
 	// Call the Avg method.
-	avg, err := rw.Avg()
+	avg, _, err := rw.Avg()
 	assert.NoError(t, err, "Unexpected error")
 
 	// Print the slots.
@@ -255,7 +255,7 @@ func TestRollingWindow_AvgWithSmallWindow(t *testing.T) {
 	}
 
 	// Call the Avg method.
-	avg, err := rw.Avg()
+	avg, _, err := rw.Avg()
 	assert.NoError(t, err, "Unexpected error")
 
 	// Print the slots.

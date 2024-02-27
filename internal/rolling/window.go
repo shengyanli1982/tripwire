@@ -21,6 +21,7 @@ var (
 
 var (
 	ErrorRollingWindowStopped = errors.New("rolling window stopped")
+	ErrorRollingWindowIsEmpty = errors.New("rolling window is empty")
 )
 
 // RollingWindow is a rolling window.
@@ -149,13 +150,13 @@ func (w *RollingWindow) Add(value float64) error {
 }
 
 // Avg returns the average of the values in the rolling window.
-func (w *RollingWindow) Avg() (float64, error) {
+func (w *RollingWindow) Avg() (float64, uint64, error) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
 	// If the rolling window is not running, return an error.
 	if !w.runing {
-		return 0, ErrorRollingWindowStopped
+		return 0, 0, ErrorRollingWindowStopped
 	}
 
 	// Update the rolling window.
@@ -172,21 +173,21 @@ func (w *RollingWindow) Avg() (float64, error) {
 
 	// If the count is 0, return 0.
 	if count == 0 {
-		return 0, nil
+		return 0, 0, ErrorRollingWindowIsEmpty
 	}
 
 	// Return the average of the values in the rolling window.
-	return sum / float64(count), nil
+	return sum / float64(count), count, nil
 }
 
 // Sum returns the sum of the values in the rolling window.
-func (w *RollingWindow) Sum() (float64, error) {
+func (w *RollingWindow) Sum() (float64, uint64, error) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
 	// If the rolling window is not running, return an error.
 	if !w.runing {
-		return 0, ErrorRollingWindowStopped
+		return 0, 0, ErrorRollingWindowStopped
 	}
 
 	// Update the rolling window.
@@ -194,11 +195,18 @@ func (w *RollingWindow) Sum() (float64, error) {
 
 	// Calculate the sum of the values in the rolling window.
 	var sum float64
+	var count uint64
 	for i := 0; i < w.size; i++ {
 		bucket := w.ring.At(i).(*Bucket)
 		sum += bucket.Sum()
+		count += bucket.Count()
+	}
+
+	// If the count is 0, return 0.
+	if count == 0 {
+		return 0, 0, ErrorRollingWindowIsEmpty
 	}
 
 	// Return the sum of the values in the rolling window.
-	return sum, nil
+	return sum, count, nil
 }
