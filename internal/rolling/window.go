@@ -171,6 +171,7 @@ func (w *RollingWindow) Avg() (float64, error) {
 		return 0, nil
 	}
 
+	// Return the average of the values in the rolling window.
 	return sum / float64(count), nil
 }
 
@@ -194,5 +195,6 @@ func (w *RollingWindow) Sum() (float64, error) {
 		sum += bucket.Sum()
 	}
 
+	// Return the sum of the values in the rolling window.
 	return sum, nil
 }
