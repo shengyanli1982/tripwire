@@ -15,7 +15,7 @@ const (
 )
 
 var (
-	minRollingWindowSize = 5       // 5 slots, 5s
+	minRollingWindowSize = 2       // 2 slots, 2s
 	maxRollingWindowSize = 10 * 60 // 600 slots, 10 minutes
 )
 
@@ -144,9 +144,7 @@ func (w *RollingWindow) Add(value float64) error {
 	bucket := w.ring.At(w.offset % w.size).(*Bucket)
 	bucket.Add(value)
 
-	// update the time when the rolling window slot was last updated.
-	w.updateAt = time.Now()
-
+	// Add success.
 	return nil
 }
 

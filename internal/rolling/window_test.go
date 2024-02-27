@@ -133,6 +133,42 @@ func TestRollingWindow_SumWithIdleSleep(t *testing.T) {
 	assert.Equal(t, expectedSum, sum, "Sum mismatch")
 }
 
+func TestRollingWindow_SumWithSmallWindow(t *testing.T) {
+	// rolling window size.
+	rwSize := 3
+
+	// timeSleep
+	timeSleep := 600
+
+	// Create a new rolling rw.
+	rw := NewRollingWindow(rwSize)
+	defer rw.Stop()
+
+	// Add some values to the rolling window.
+	var err error
+	for i := 1; i <= rwSize*2; i++ {
+		err = rw.Add(float64(i))
+		assert.NoError(t, err, "Unexpected error")
+		time.Sleep(time.Duration(timeSleep) * time.Millisecond)
+	}
+
+	// Calculate the expected sum.
+	expectedSum := 18.0
+
+	// Call the Sum method.
+	sum, err := rw.Sum()
+	assert.NoError(t, err, "Unexpected error")
+
+	// Print the slots.
+	for i := 0; i < len(rw.ring.slots); i++ {
+		fmt.Printf("Slot %d: %v\n", i, rw.ring.slots[i])
+	}
+
+	// Check if the sum matches the expected sum.
+	assert.Equal(t, expectedSum, sum, "Sum mismatch")
+
+}
+
 func TestRollingWindow_Avg(t *testing.T) {
 	// rolling window size.
 	rwSize := 5
@@ -194,6 +230,41 @@ func TestRollingWindow_AvgWithIdleSleep(t *testing.T) {
 
 	// Calculate the expected average.
 	expectedAvg := (1.0 + 2.0 + 3.0 + 4.0 + 5.0) / float64(rwSize)
+
+	// Check if the average matches the expected average.
+	assert.Equal(t, expectedAvg, avg, "Average mismatch")
+}
+
+func TestRollingWindow_AvgWithSmallWindow(t *testing.T) {
+	// rolling window size.
+	rwSize := 3
+
+	// timeSleep
+	timeSleep := 600
+
+	// Create a new rolling rw.
+	rw := NewRollingWindow(rwSize)
+	defer rw.Stop()
+
+	// Add some values to the rolling window.
+	var err error
+	for i := 1; i <= rwSize*2; i++ {
+		err = rw.Add(float64(i))
+		assert.NoError(t, err, "Unexpected error")
+		time.Sleep(time.Duration(timeSleep) * time.Millisecond)
+	}
+
+	// Call the Avg method.
+	avg, err := rw.Avg()
+	assert.NoError(t, err, "Unexpected error")
+
+	// Print the slots.
+	for i := 0; i < len(rw.ring.slots); i++ {
+		fmt.Printf("Slot %d: %v\n", i, rw.ring.slots[i])
+	}
+
+	// Calculate the expected average.
+	expectedAvg := 4.5
 
 	// Check if the average matches the expected average.
 	assert.Equal(t, expectedAvg, avg, "Average mismatch")
