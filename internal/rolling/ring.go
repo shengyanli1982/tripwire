@@ -2,7 +2,7 @@ package rolling
 
 type Ring struct {
 	// The ring buffer.
-	buffer []any
+	slots []any
 	// The index of the first element in the ring buffer.
 	head uint64
 	// The index of the last element in the ring buffer.
@@ -22,7 +22,7 @@ func NewRing(cap int) *Ring {
 
 	// Create and return the ring buffer.
 	return &Ring{
-		buffer: make([]any, cap), // The ring buffer is a slice of any.
+		slots:  make([]any, cap), // The ring buffer is a slice of any.
 		cap:    cap,              // cap is a power of 2.
 		optval: uint64(cap - 1),  // optval is cap - 1. This is used to calculate the modulo of the indices.
 	}
@@ -57,8 +57,9 @@ func (r *Ring) Head() any {
 	if r.count == 0 {
 		return nil
 	}
+
 	// Return the first element in the ring buffer.
-	return r.buffer[r.head]
+	return r.slots[r.head]
 }
 
 // Tail returns the last element in the ring buffer.
@@ -67,14 +68,26 @@ func (r *Ring) Tail() any {
 	if r.count == 0 {
 		return nil
 	}
+
 	// Return the last element in the ring buffer.
-	return r.buffer[(r.tail-1)&r.optval]
+	return r.slots[(r.tail-1)&r.optval]
+}
+
+// At returns the element at the specified index in the ring buffer.
+func (r *Ring) At(i int) any {
+	// If the ring buffer is empty, return nil.
+	if r.count == 0 {
+		return nil
+	}
+
+	// Return the element at the specified index in the ring buffer.
+	return r.slots[(r.head+uint64(i))&r.optval]
 }
 
 // Push appends a new element to the ring buffer.
 func (r *Ring) Push(v any) {
 	// Append the new element to the ring buffer.
-	r.buffer[r.tail] = v
+	r.slots[r.tail] = v
 
 	// Increment the tail index and the count.
 	r.tail = (r.tail + 1) & r.optval
@@ -86,4 +99,9 @@ func (r *Ring) Push(v any) {
 		// Increment the head index. This overwrites the oldest element in the ring buffer. Let r.head & r.optval == 0
 		r.head = (r.head + 1) & r.optval
 	}
+}
+
+// Values returns the elements in the ring buffer.
+func (r *Ring) Values() []any {
+	return r.slots
 }
