@@ -11,7 +11,7 @@ const (
 	DefaultRollingWindowSize = 10
 
 	// The default duration of each slot in the rolling window.
-	DefaultRollingWindowSlotInterval = time.Millisecond * 200
+	DefaultRollingWindowSlotInterval = time.Millisecond * 500
 )
 
 var (
@@ -57,10 +57,13 @@ func NewRollingWindow(size int) *RollingWindow {
 		size = DefaultRollingWindowSize
 	}
 
+	// Calculate the number of slots in the rolling window.
+	slotCount := size * int(time.Second/DefaultRollingWindowSlotInterval)
+
 	// Create and return the rolling window.
 	rw := RollingWindow{
-		ring:     NewRing(size),
-		size:     size,
+		ring:     NewRing(slotCount),
+		size:     slotCount,
 		interval: DefaultRollingWindowSlotInterval,
 		// ignoreCurrent: ignore,
 		lock:     sync.Mutex{},
@@ -141,6 +144,9 @@ func (w *RollingWindow) Add(value float64) error {
 	bucket := w.ring.At(w.offset % w.size).(*Bucket)
 	bucket.Add(value)
 
+	// update the time when the rolling window slot was last updated.
+	w.updateAt = time.Now()
+
 	return nil
 }
 
@@ -161,7 +167,7 @@ func (w *RollingWindow) Avg() (float64, error) {
 	var sum float64
 	var count uint64
 	for i := 0; i < w.size; i++ {
-		bucket := w.ring.At(-i).(*Bucket)
+		bucket := w.ring.At(i).(*Bucket)
 		sum += bucket.Sum()
 		count += bucket.Count()
 	}
@@ -191,7 +197,7 @@ func (w *RollingWindow) Sum() (float64, error) {
 	// Calculate the sum of the values in the rolling window.
 	var sum float64
 	for i := 0; i < w.size; i++ {
-		bucket := w.ring.At(-i).(*Bucket)
+		bucket := w.ring.At(i).(*Bucket)
 		sum += bucket.Sum()
 	}
 

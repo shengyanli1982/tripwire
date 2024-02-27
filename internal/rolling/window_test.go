@@ -103,7 +103,7 @@ func TestRollingWindow_SumWithIdleSleep(t *testing.T) {
 	rwSize := 5
 
 	// timeSleep
-	timeSleep := 500
+	timeSleep := 600
 
 	// Create a new rolling rw.
 	rw := NewRollingWindow(rwSize)
@@ -169,7 +169,7 @@ func TestRollingWindow_AvgWithIdleSleep(t *testing.T) {
 	rwSize := 5
 
 	// timeSleep
-	timeSleep := 500
+	timeSleep := 600
 
 	// Create a new rolling rw.
 	rw := NewRollingWindow(rwSize)
