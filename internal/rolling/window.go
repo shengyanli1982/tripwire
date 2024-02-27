@@ -31,6 +31,9 @@ type RollingWindow struct {
 	// The size of the rolling window.
 	size int
 
+	// The offset of the rolling window. writing index
+	offset int
+
 	// The duration of each slot.
 	interval time.Duration
 
@@ -87,27 +90,38 @@ func (w *RollingWindow) Stop() {
 
 // span returns the number of slots that have elapsed since the rolling window was last updated.
 func (w *RollingWindow) span() int {
-	return int(time.Since(w.updateAt) / w.interval)
+	offset := int(time.Since(w.updateAt) / w.interval)
+	if offset >= 0 && offset < w.size {
+		return offset
+	}
+	return w.size
 }
 
-// updateSlot updates the rolling window.
-func (w *RollingWindow) updateSlots() {
+// updateOffset updates the rolling window.
+func (w *RollingWindow) updateOffset() {
 	// Calculate the number of slots that have elapsed since the rolling window was last updated.
 	n := w.span()
 
 	// If the rolling window has not been updated, return.
-	if n == 0 {
+	if n <= 0 {
 		return
 	}
 
-	// If the rolling window has been move forward, reset the slots that have elapsed.
-	for i := 0; i < n; i++ {
-		bucket := w.ring.At(i).(*Bucket)
+	// Get the current offset.
+	offset := w.offset
+
+	// If the rolling window has been moved forward, reset the slots that have elapsed.
+	for i := 1; i <= n; i++ {
+		bucket := w.ring.At((offset + i) % w.size).(*Bucket)
 		bucket.Reset()
 	}
 
+	// Update the offset of the rolling window.
+	w.offset = (offset + n) % w.size
+
 	// Update the time when the rolling window slot was last updated.
-	w.updateAt = time.Now()
+	now := time.Now().UnixNano()
+	w.updateAt = time.Unix(0, now-(now%int64(w.interval)))
 }
 
 // Add adds a value to the rolling window.
@@ -121,10 +135,10 @@ func (w *RollingWindow) Add(value float64) error {
 	}
 
 	// Update the rolling window.
-	w.updateSlots()
+	w.updateOffset()
 
 	// Add the value to the current slot.
-	bucket := w.ring.Head().(*Bucket)
+	bucket := w.ring.At(w.offset % w.size).(*Bucket)
 	bucket.Add(value)
 
 	return nil
@@ -141,13 +155,13 @@ func (w *RollingWindow) Avg() (float64, error) {
 	}
 
 	// Update the rolling window.
-	w.updateSlots()
+	w.updateOffset()
 
 	// Calculate the average of the values in the rolling window.
 	var sum float64
 	var count uint64
-	for i := 0; i < w.ring.Len(); i++ {
-		bucket := w.ring.At(i).(*Bucket)
+	for i := 0; i < w.size; i++ {
+		bucket := w.ring.At(-i).(*Bucket)
 		sum += bucket.Sum()
 		count += bucket.Count()
 	}
@@ -171,12 +185,12 @@ func (w *RollingWindow) Sum() (float64, error) {
 	}
 
 	// Update the rolling window.
-	w.updateSlots()
+	w.updateOffset()
 
 	// Calculate the sum of the values in the rolling window.
 	var sum float64
-	for i := 0; i < w.ring.Len(); i++ {
-		bucket := w.ring.At(i).(*Bucket)
+	for i := 0; i < w.size; i++ {
+		bucket := w.ring.At(-i).(*Bucket)
 		sum += bucket.Sum()
 	}
 
