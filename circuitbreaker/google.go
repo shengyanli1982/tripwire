@@ -1,10 +1,11 @@
-package breaker
+package circuitbreaker
 
 import (
 	"errors"
 	"math"
 	"sync"
 
+	com "github.com/shengyanli1982/tripwire/common"
 	rw "github.com/shengyanli1982/tripwire/internal/rolling"
 	"github.com/shengyanli1982/tripwire/internal/utils"
 )
@@ -16,17 +17,23 @@ const (
 
 var ErrorServiceUnavailable = errors.New("service unavailable")
 
-// Breaker is a circuit breaker that opens when the error rate is high.
-type Breaker struct {
+// DefaultAcceptableFunc is the default acceptable function.
+func DefaultAcceptableFunc(err error) bool { return err == nil }
+
+// DefaultFallbackFunc is the default fallback function.
+func DefaultFallbackFunc(err error) error { return err }
+
+// GoogleBreaker is a circuit breaker that opens when the error rate is high.
+type GoogleBreaker struct {
 	config *Config
 	rwin   *rw.RollingWindow
 	once   sync.Once
 }
 
-// NewBreaker returns a new breaker.
-func NewBreaker(conf *Config) *Breaker {
+// NewGoogleBreaker returns a new breaker.
+func NewGoogleBreaker(conf *Config) *GoogleBreaker {
 	conf = isConfigValid(conf)
-	return &Breaker{
+	return &GoogleBreaker{
 		config: conf,
 		rwin:   rw.NewRollingWindow(conf.protected),
 		once:   sync.Once{},
@@ -34,19 +41,19 @@ func NewBreaker(conf *Config) *Breaker {
 }
 
 // Stop stops the breaker.
-func (b *Breaker) Stop() {
+func (b *GoogleBreaker) Stop() {
 	b.once.Do(func() {
 		b.rwin.Stop()
 	})
 }
 
 // history returns the history of the breaker. Sum of accepted and total, and error if any
-func (b *Breaker) history() (float64, uint64, error) {
+func (b *GoogleBreaker) history() (float64, uint64, error) {
 	return b.rwin.Sum()
 }
 
 // Accept accepts a execution.
-func (b *Breaker) accept() error {
+func (b *GoogleBreaker) accept() error {
 	// Get the history state of the breaker.
 	accepted, total, err := b.history()
 	if err != nil {
@@ -69,17 +76,17 @@ func (b *Breaker) accept() error {
 }
 
 // Reject rejects the execution.
-func (b *Breaker) Reject(reason error) {
+func (b *GoogleBreaker) Reject(reason error) {
 	b.config.callback.OnReject(b.rwin.Add(0), reason)
 }
 
 // Accept accepts the execution.
-func (b *Breaker) Accept() {
+func (b *GoogleBreaker) Accept() {
 	b.config.callback.OnAccept(b.rwin.Add(1))
 }
 
 // Allow checks if the circuit breaker allows the execution.
-func (b *Breaker) Allow() (Result, error) {
+func (b *GoogleBreaker) Allow() (com.Notifier, error) {
 	// Accept the execution.
 	if err := b.accept(); err != nil {
 		return nil, err
@@ -89,8 +96,8 @@ func (b *Breaker) Allow() (Result, error) {
 	return b, nil
 }
 
-// Do executes the given function with circuit breaker protection.
-func (b *Breaker) Do(fn HandleFunc, fallback FallbackFunc, acceptable AcceptableFunc) error {
+// do executes the given function with circuit breaker protection.
+func (b *GoogleBreaker) do(fn com.HandleFunc, fallback com.FallbackFunc, acceptable com.AcceptableFunc) error {
 	var err error
 
 	// If accept returns an error, reject the execution and return the error.
@@ -112,4 +119,20 @@ func (b *Breaker) Do(fn HandleFunc, fallback FallbackFunc, acceptable Acceptable
 
 	// Return the error.
 	return err
+}
+
+func (b *GoogleBreaker) Do(fn com.HandleFunc) error {
+	return b.do(fn, nil, DefaultAcceptableFunc)
+}
+
+func (b *GoogleBreaker) DoWithAcceptable(fn com.HandleFunc, acceptable com.AcceptableFunc) error {
+	return b.do(fn, nil, acceptable)
+}
+
+func (b *GoogleBreaker) DoWithFallback(fn com.HandleFunc, fallback com.FallbackFunc) error {
+	return b.do(fn, fallback, DefaultAcceptableFunc)
+}
+
+func (b *GoogleBreaker) DoWithFallbackAcceptable(fn com.HandleFunc, fallback com.FallbackFunc, acceptable com.AcceptableFunc) error {
+	return b.do(fn, fallback, acceptable)
 }

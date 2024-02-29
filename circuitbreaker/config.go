@@ -1,4 +1,4 @@
-package breaker
+package circuitbreaker
 
 const (
 	// DefaultKValue is the default value of k.
