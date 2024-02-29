@@ -6,20 +6,14 @@ package breaker
 import (
 	"errors"
 	"math"
-	"math/rand"
 	"sync"
-	"time"
 
 	rw "github.com/shengyanli1982/tripwire/internal/rolling"
+	"github.com/shengyanli1982/tripwire/internal/utils"
 )
 
-// random is a random number generator.
-var random = rand.New(rand.NewSource(time.Now().UnixNano()))
-
-// GenerateRatio returns a random float64 between 0 and 1.
-func GenerateRatio() float64 {
-	return random.Float64()
-}
+// The default floating-point precision is set to 2.
+const DefaultFloatingPrecision = 2
 
 var (
 	ErrorServiceUnavailable = errors.New("service unavailable")
@@ -70,7 +64,7 @@ func (b *Breaker) accept() error {
 	fuseRatio := math.Max(0, (float64(total-uint64(b.config.protected))-weightedAccepted)/float64(total+1))
 
 	// If the fuse ratio is less than or equal to 0, or if the fuse ratio is less than a random float64 between 0 and 1, return nil.
-	if fuseRatio <= 0 || fuseRatio < GenerateRatio() {
+	if fuseRatio <= 0 || fuseRatio < utils.Round(utils.GenerateRandomRatio(), DefaultFloatingPrecision) {
 		return nil
 	}
 

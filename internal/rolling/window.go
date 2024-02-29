@@ -148,8 +148,8 @@ func (w *RollingWindow) Add(value float64) error {
 	return nil
 }
 
-// Avg returns the average of the values in the rolling window.
-func (w *RollingWindow) Avg() (float64, uint64, error) {
+// calculateStats calculates the sum and count of the values in the rolling window.
+func (w *RollingWindow) calculateStats() (float64, uint64, error) {
 	w.lock.Lock()
 	defer w.lock.Unlock()
 
@@ -161,7 +161,7 @@ func (w *RollingWindow) Avg() (float64, uint64, error) {
 	// Update the rolling window.
 	w.updateOffset()
 
-	// Calculate the average of the values in the rolling window.
+	// Calculate the sum and count of the values in the rolling window.
 	var sum float64
 	var count uint64
 	for i := 0; i < w.size; i++ {
@@ -170,9 +170,20 @@ func (w *RollingWindow) Avg() (float64, uint64, error) {
 		count += bucket.Count()
 	}
 
-	// If the count is 0, return 0.
+	// If the count is 0, return an error.
 	if count == 0 {
 		return 0, 0, ErrorRollingWindowIsEmpty
+	}
+
+	return sum, count, nil
+}
+
+// Avg returns the average of the values in the rolling window.
+func (w *RollingWindow) Avg() (float64, uint64, error) {
+	// Calculate the sum and count of the values in the rolling window.
+	sum, count, err := w.calculateStats()
+	if err != nil {
+		return 0, 0, err
 	}
 
 	// Return the average of the values in the rolling window.
@@ -181,29 +192,9 @@ func (w *RollingWindow) Avg() (float64, uint64, error) {
 
 // Sum returns the sum of the values in the rolling window.
 func (w *RollingWindow) Sum() (float64, uint64, error) {
-	w.lock.Lock()
-	defer w.lock.Unlock()
-
-	// If the rolling window is not running, return an error.
-	if !w.runing {
-		return 0, 0, ErrorRollingWindowStopped
-	}
-
-	// Update the rolling window.
-	w.updateOffset()
-
-	// Calculate the sum of the values in the rolling window.
-	var sum float64
-	var count uint64
-	for i := 0; i < w.size; i++ {
-		bucket := w.ring.At(i).(*Bucket)
-		sum += bucket.Sum()
-		count += bucket.Count()
-	}
-
-	// If the count is 0, return 0.
-	if count == 0 {
-		return 0, 0, ErrorRollingWindowIsEmpty
+	sum, count, err := w.calculateStats()
+	if err != nil {
+		return 0, 0, err
 	}
 
 	// Return the sum of the values in the rolling window.

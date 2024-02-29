@@ -1,4 +1,4 @@
-package rolling
+package utils
 
 import (
 	"testing"

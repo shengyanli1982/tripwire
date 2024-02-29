@@ -1,6 +1,10 @@
-package rolling
+package utils
 
-import "math"
+import (
+	"math"
+	"math/rand"
+	"time"
+)
 
 // FindNextPowerOfTwo returns the next power of 2 that is greater than or equal to n.
 func FindNextPowerOfTwo(n int) int {
@@ -25,4 +29,12 @@ func Round(f float64, n int) float64 {
 
 	// Round f to n decimal places.
 	return math.Round(f*pow) / pow
+}
+
+// random is a random number generator.
+var random = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+// GenerateRandomRatio returns a random float64 between 0 and 1.
+func GenerateRandomRatio() float64 {
+	return random.Float64()
 }

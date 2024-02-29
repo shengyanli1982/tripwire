@@ -1,5 +1,7 @@
 package rolling
 
+import "github.com/shengyanli1982/tripwire/internal/utils"
+
 type Ring struct {
 	// The ring buffer.
 	slots []any
@@ -18,7 +20,7 @@ type Ring struct {
 // NewRing returns a new ring buffer with the specified capacity.
 func NewRing(cap int) *Ring {
 	// Ensure that the capacity is a power of 2.
-	cap = FindNextPowerOfTwo(cap)
+	cap = utils.FindNextPowerOfTwo(cap)
 
 	// Create and return the ring buffer.
 	return &Ring{
