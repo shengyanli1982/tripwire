@@ -1,8 +1,5 @@
 package breaker
 
-// See Client-Side Throttling section in
-// https://landing.google.com/sre/sre-book/chapters/handling-overload/
-
 import (
 	"errors"
 	"math"
@@ -12,12 +9,12 @@ import (
 	"github.com/shengyanli1982/tripwire/internal/utils"
 )
 
-// The default floating-point precision is set to 2.
-const DefaultFloatingPrecision = 2
-
-var (
-	ErrorServiceUnavailable = errors.New("service unavailable")
+const (
+	// The default floating-point precision is set to 2.
+	DefaultFloatingPrecision = 2
 )
+
+var ErrorServiceUnavailable = errors.New("service unavailable")
 
 // Breaker is a circuit breaker that opens when the error rate is high.
 type Breaker struct {
@@ -45,8 +42,7 @@ func (b *Breaker) Stop() {
 
 // history returns the history of the breaker. Sum of accepted and total, and error if any
 func (b *Breaker) history() (float64, uint64, error) {
-	accepted, total, err := b.rwin.Sum()
-	return accepted, total, err
+	return b.rwin.Sum()
 }
 
 // Accept accepts a execution.
@@ -70,4 +66,50 @@ func (b *Breaker) accept() error {
 
 	// Otherwise, trigger the breaker.
 	return ErrorServiceUnavailable
+}
+
+// Reject rejects the execution.
+func (b *Breaker) Reject(reason error) {
+	b.config.callback.OnReject(b.rwin.Add(0), reason)
+}
+
+// Accept accepts the execution.
+func (b *Breaker) Accept() {
+	b.config.callback.OnAccept(b.rwin.Add(1))
+}
+
+// Allow checks if the circuit breaker allows the execution.
+func (b *Breaker) Allow() (Result, error) {
+	// Accept the execution.
+	if err := b.accept(); err != nil {
+		return nil, err
+	}
+
+	// Return the result notifier.
+	return b, nil
+}
+
+// Do executes the given function with circuit breaker protection.
+func (b *Breaker) Do(fn HandleFunc, fallback FallbackFunc, acceptable AcceptableFunc) error {
+	var err error
+
+	// If accept returns an error, reject the execution and return the error.
+	if err = b.accept(); err != nil {
+		b.Reject(err)
+		if fallback != nil {
+			return fallback(err)
+		}
+		return err
+	}
+
+	// Exec the handle function, if the error is acceptable, accept the execution, otherwise reject the execution.
+	err = fn()
+	if acceptable(err) {
+		b.Accept()
+	} else {
+		b.Reject(err)
+	}
+
+	// Return the error.
+	return err
 }
