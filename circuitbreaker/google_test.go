@@ -218,3 +218,61 @@ func TestGoogleBreaker_Do(t *testing.T) {
 	err = breaker.Do(fn)
 	assert.ErrorIs(t, err, execError, "Unexpected error")
 }
+
+func TestGoogleBreaker_DoWithFallbackAcceptable_FallbackTrigger(t *testing.T) {
+	var (
+		execError = errors.New("execution error")
+		fbError   = errors.New("fallback error")
+	)
+
+	breaker := NewGoogleBreaker(nil)
+	defer breaker.Stop()
+
+	// Simulate running 100 times, failed
+	for i := 0; i < 100; i++ {
+		err := breaker.rwin.Add(0)
+		assert.Nil(t, err)
+	}
+
+	// Simulate running 1 time, success
+	err := breaker.rwin.Add(1)
+	assert.Nil(t, err)
+
+	// Test case 1: Successful execution with fallback error and acceptable result
+	fn := func() error {
+		return nil
+	}
+	fallback := func(err error) error {
+		return fbError
+	}
+	acceptable := func(err error) bool {
+		return err == nil
+	}
+	err = breaker.DoWithFallbackAcceptable(fn, fallback, acceptable)
+	assert.ErrorIs(t, err, fbError, "Unexpected error")
+
+	// Test case 2: Successful execution with fallback error and unacceptable result
+	acceptable = func(err error) bool {
+		return err != nil
+	}
+	err = breaker.DoWithFallbackAcceptable(fn, fallback, acceptable)
+	assert.ErrorIs(t, err, fbError, "Unexpected error")
+
+	// Test case 3: Failed execution with fallback error and acceptable result
+	fn = func() error {
+		return execError
+	}
+	acceptable = func(err error) bool {
+		return err == execError
+	}
+	err = breaker.DoWithFallbackAcceptable(fn, fallback, acceptable)
+	assert.ErrorIs(t, err, fbError, "Unexpected error")
+
+	// Test case 4: Failed execution with fallback error and unacceptable result
+	acceptable = func(err error) bool {
+		return err != execError
+	}
+
+	err = breaker.DoWithFallbackAcceptable(fn, fallback, acceptable)
+	assert.ErrorIs(t, err, fbError, "Unexpected error")
+}
