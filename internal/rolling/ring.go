@@ -1,109 +1,97 @@
+// 定义包名
+// Define the package name
 package rolling
 
+// 导入依赖
+// Import dependencies
 import "github.com/shengyanli1982/tripwire/internal/utils"
 
+// 定义 Ring 结构体
+// Define the Ring struct
 type Ring struct {
-	// The ring buffer.
-	slots []any
-	// The index of the first element in the ring buffer.
-	head uint64
-	// The index of the last element in the ring buffer.
-	tail uint64
-	// The number of elements in the ring buffer.
-	count int
-	// The maximum number of elements in the ring buffer. This is must be a power of 2.
-	cap int
-	// The default value for new elements in the ring buffer.
-	optval uint64
+	slots  []any  // 存储元素的数组 Array to store elements
+	head   uint64 // 头部索引 Head index
+	tail   uint64 // 尾部索引 Tail index
+	count  int    // 当前元素数量 Current number of elements
+	cap    int    // Ring 的容量 Capacity of the Ring
+	optval uint64 // 用于优化的值 Value for optimization
 }
 
-// NewRing returns a new ring buffer with the specified capacity.
+// NewRing 函数创建并返回一个新的 Ring 实例
+// The NewRing function creates and returns a new instance of Ring
 func NewRing(cap int) *Ring {
-	// Ensure that the capacity is a power of 2.
 	cap = utils.FindNextPowerOfTwo(cap)
-
-	// Create and return the ring buffer.
 	return &Ring{
-		slots:  make([]any, cap), // The ring buffer is a slice of any.
-		cap:    cap,              // cap is a power of 2.
-		optval: uint64(cap - 1),  // optval is cap - 1. This is used to calculate the modulo of the indices.
+		slots:  make([]any, cap),
+		cap:    cap,
+		optval: uint64(cap - 1),
 	}
 }
 
-// Reset resets the ring buffer.
+// Reset 方法重置 Ring 的 head、tail 和 count
+// The Reset method resets the head, tail and count of the Ring
 func (r *Ring) Reset() {
 	r.head = 0
 	r.tail = 0
 	r.count = 0
 }
 
-// Len returns the number of elements in the ring buffer.
+// Len 方法返回 Ring 的长度，如果 count 小于 cap，则返回 count，否则返回 cap
+// The Len method returns the length of the Ring, returns count if count is less than cap, otherwise returns cap
 func (r *Ring) Len() int {
-	// If the ring buffer is not full, return the number of elements in the ring buffer.
 	if r.count < r.cap {
 		return r.count
 	}
-
-	// If the ring buffer is full, return the maximum number of elements in the ring buffer.
 	return r.cap
 }
 
-// Cap returns the maximum number of elements in the ring buffer.
+// Cap 方法返回 Ring 的容量
+// The Cap method returns the capacity of the Ring
 func (r *Ring) Cap() int {
 	return r.cap
 }
 
-// Head returns the first element in the ring buffer.
+// Head 方法返回 Ring 的头部元素，如果 count 为 0，则返回 nil
+// The Head method returns the head element of the Ring, returns nil if count is 0
 func (r *Ring) Head() any {
-	// If the ring buffer is empty, return nil.
 	if r.count == 0 {
 		return nil
 	}
-
-	// Return the first element in the ring buffer.
 	return r.slots[r.head]
 }
 
-// Tail returns the last element in the ring buffer.
+// Tail 方法返回 Ring 的尾部元素，如果 count 为 0，则返回 nil
+// The Tail method returns the tail element of the Ring, returns nil if count is 0
 func (r *Ring) Tail() any {
-	// If the ring buffer is empty, return nil.
 	if r.count == 0 {
 		return nil
 	}
-
-	// Return the last element in the ring buffer.
 	return r.slots[(r.tail-1)&r.optval]
 }
 
-// At returns the element at the specified index in the ring buffer.
+// At 方法返回 Ring 中索引为 i 的元素，如果 count 为 0，则返回 nil
+// The At method returns the element at index i in the Ring, returns nil if count is 0
 func (r *Ring) At(i int) any {
-	// If the ring buffer is empty, return nil.
 	if r.count == 0 {
 		return nil
 	}
-
-	// Return the element at the specified index in the ring buffer.
 	return r.slots[(r.head+uint64(i))&r.optval]
 }
 
-// Push appends a new element to the ring buffer.
+// Push 方法将一个元素添加到 Ring 的尾部
+// The Push method adds an element to the tail of the Ring
 func (r *Ring) Push(v any) {
-	// Append the new element to the ring buffer.
 	r.slots[r.tail] = v
-
-	// Increment the tail index and the count.
 	r.tail = (r.tail + 1) & r.optval
-
-	// Increment the count.
 	if r.count < r.cap {
 		r.count++
 	} else {
-		// Increment the head index. This overwrites the oldest element in the ring buffer. Let r.head & r.optval == 0
 		r.head = (r.head + 1) & r.optval
 	}
 }
 
-// Values returns the elements in the ring buffer.
+// Values 方法返回 Ring 中的所有元素
+// The Values method returns all elements in the Ring
 func (r *Ring) Values() []any {
 	return r.slots
 }

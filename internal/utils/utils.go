@@ -6,35 +6,44 @@ import (
 	"time"
 )
 
-// FindNextPowerOfTwo returns the next power of 2 that is greater than or equal to n.
+// FindNextPowerOfTwo 函数找到大于或等于 n 的最小的 2 的幂
+// The FindNextPowerOfTwo function finds the smallest power of two that is greater than or equal to n
 func FindNextPowerOfTwo(n int) int {
-	// If n is already a power of 2, return n.
+	// 如果 n 是 2 的幂，直接返回 n
+	// If n is a power of 2, return n directly
 	if (n & (n - 1)) == 0 {
 		return n
 	}
 
-	// Set the most significant bit to 1 and all other bits to 0.
+	// 从最高位开始，每次右移一位，直到 n 的所有位都是 1
+	// Starting from the highest bit, shift right one bit at a time until all bits of n are 1
 	for i := 1; i <= 32; i <<= 1 {
 		n |= n >> i
 	}
 
-	// Increment n by 1 to get the next power of 2.
+	// n + 1 是 2 的幂
+	// n + 1 is a power of 2
 	return n + 1
 }
 
-// Round returns f rounded to n decimal places.
+// Round 函数将浮点数 f 四舍五入到小数点后 n 位
+// The Round function rounds the float number f to n decimal places
 func Round(f float64, n int) float64 {
-	// Calculate 10^n.
+	// pow 是 10 的 n 次方
+	// pow is 10 to the power of n
 	pow := math.Pow(10, float64(n))
 
-	// Round f to n decimal places.
+	// 返回四舍五入后的结果
+	// Return the result after rounding
 	return math.Round(f*pow) / pow
 }
 
-// random is a random number generator.
+// 创建一个新的随机数生成器
+// Create a new random number generator
 var random = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-// GenerateRandomRatio returns a random float64 between 0 and 1.
+// GenerateRandomRatio 函数生成一个 [0,1) 之间的随机浮点数
+// The GenerateRandomRatio function generates a random float number between [0,1)
 func GenerateRandomRatio() float64 {
 	return random.Float64()
 }
