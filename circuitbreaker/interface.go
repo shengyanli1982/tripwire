@@ -1,21 +1,27 @@
 package circuitbreaker
 
 type Callback interface {
-	// OnAccept is called when the call is successful.
-	OnAccept(opterr error)
+	// OnSuccess is called when the call is successful.
+	OnSuccess(opterr error)
 
-	// OnReject is called when the call is failed.
-	OnReject(opterr, reason error)
+	// OnFailed is called when the call is failed.
+	OnFailed(opterr, reason error)
+
+	// OnAccept is called when the call is accepted.
+	OnAccept(reason error, refFactor float64)
 }
 
 // empty callback for the breaker
 type emptyCallback struct{}
 
-// OnAccept is nop called when the call is successful.
-func (emptyCallback) OnAccept(opterr error) {}
+// OnSuccess is nop called when the call is successful.
+func (emptyCallback) OnSuccess(opterr error) {}
 
-// OnReject is nop called when the call is failed.
-func (emptyCallback) OnReject(opterr, reason error) {}
+// OnFailed is nop called when the call is failed.
+func (emptyCallback) OnFailed(opterr, reason error) {}
+
+// OnAccept is nop called when the call is accepted.
+func (emptyCallback) OnAccept(reason error, refFactor float64) {}
 
 // NewEmptyCallback returns a new empty callback for the breaker.
 func NewEmptyCallback() Callback {

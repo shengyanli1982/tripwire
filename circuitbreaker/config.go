@@ -6,21 +6,26 @@ const (
 
 	// DefaultProtected is the default value of protected.
 	DefaultProtected = 5
+
+	// DefaultStateWindow is the default value of state window.
+	DefaultStateWindow = 10
 )
 
 // Config is the configuration for the breaker.
 type Config struct {
-	k         float64
-	protected int
-	callback  Callback
+	k           float64
+	protected   int
+	callback    Callback
+	stateWindow int
 }
 
 // NewConfig returns a new configuration for the breaker.
 func NewConfig() *Config {
 	return &Config{
-		k:         DefaultKValue,
-		protected: DefaultProtected,
-		callback:  NewEmptyCallback(),
+		k:           DefaultKValue,
+		protected:   DefaultProtected,
+		callback:    NewEmptyCallback(),
+		stateWindow: DefaultStateWindow,
 	}
 }
 
@@ -46,6 +51,12 @@ func (c *Config) WithProtected(protected int) *Config {
 	return c
 }
 
+// WithStateWindow sets the state window of the configuration.
+func (c *Config) WithStateWindow(window int) *Config {
+	c.protected = window
+	return c
+}
+
 // isConfigValid checks if the configuration is valid.
 func isConfigValid(conf *Config) *Config {
 	if conf != nil {
@@ -57,6 +68,9 @@ func isConfigValid(conf *Config) *Config {
 		}
 		if conf.callback == nil {
 			conf.callback = NewEmptyCallback()
+		}
+		if conf.stateWindow <= 0 {
+			conf.stateWindow = DefaultStateWindow
 		}
 	} else {
 		conf = DefaultConfig()

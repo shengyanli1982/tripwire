@@ -19,10 +19,7 @@ var (
 	maxRollingWindowSize = 10 * 60 // 600 slots, 10 minutes
 )
 
-var (
-	ErrorRollingWindowStopped = errors.New("rolling window stopped")
-	ErrorRollingWindowIsEmpty = errors.New("rolling window is empty")
-)
+var ErrorRollingWindowStopped = errors.New("rolling window stopped")
 
 // RollingWindow is a rolling window.
 type RollingWindow struct {
@@ -168,11 +165,6 @@ func (w *RollingWindow) calculateStats() (float64, uint64, error) {
 		bucket := w.ring.At(i).(*Bucket)
 		sum += bucket.Sum()
 		count += bucket.Count()
-	}
-
-	// If the count is 0, return an error.
-	if count == 0 {
-		return 0, 0, ErrorRollingWindowIsEmpty
 	}
 
 	return sum, count, nil

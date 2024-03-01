@@ -35,7 +35,7 @@ func NewGoogleBreaker(conf *Config) *GoogleBreaker {
 	conf = isConfigValid(conf)
 	return &GoogleBreaker{
 		config: conf,
-		rwin:   rw.NewRollingWindow(conf.protected),
+		rwin:   rw.NewRollingWindow(conf.stateWindow),
 		once:   sync.Once{},
 	}
 }
@@ -53,7 +53,7 @@ func (b *GoogleBreaker) history() (float64, uint64, error) {
 }
 
 // Accept accepts a execution.
-func (b *GoogleBreaker) accept() error {
+func (b *GoogleBreaker) accept(ratio float64) error {
 	// Get the history state of the breaker.
 	accepted, total, err := b.history()
 	if err != nil {
@@ -64,31 +64,34 @@ func (b *GoogleBreaker) accept() error {
 	weightedAccepted := b.config.k * accepted
 
 	// Calculate the fuse ratio.
-	fuseRatio := math.Max(0, (float64(total-uint64(b.config.protected))-weightedAccepted)/float64(total+1))
+	refFactor := utils.Round((float64(total-uint64(b.config.protected))-weightedAccepted)/float64(total+1), DefaultFloatingPrecision)
+	fuseRatio := math.Max(0, refFactor)
 
 	// If the fuse ratio is less than or equal to 0, or if the fuse ratio is less than a random float64 between 0 and 1, return nil.
-	if fuseRatio <= 0 || fuseRatio < utils.Round(utils.GenerateRandomRatio(), DefaultFloatingPrecision) {
+	if fuseRatio <= 0 || fuseRatio >= utils.Round(ratio, DefaultFloatingPrecision) {
+		b.config.callback.OnAccept(nil, refFactor)
 		return nil
 	}
 
 	// Otherwise, trigger the breaker.
+	b.config.callback.OnAccept(ErrorServiceUnavailable, refFactor)
 	return ErrorServiceUnavailable
 }
 
 // Reject rejects the execution.
 func (b *GoogleBreaker) Reject(reason error) {
-	b.config.callback.OnReject(b.rwin.Add(0), reason)
+	b.config.callback.OnFailed(b.rwin.Add(0), reason)
 }
 
 // Accept accepts the execution.
 func (b *GoogleBreaker) Accept() {
-	b.config.callback.OnAccept(b.rwin.Add(1))
+	b.config.callback.OnSuccess(b.rwin.Add(1))
 }
 
 // Allow checks if the circuit breaker allows the execution.
 func (b *GoogleBreaker) Allow() (com.Notifier, error) {
 	// Accept the execution.
-	if err := b.accept(); err != nil {
+	if err := b.accept(utils.GenerateRandomRatio()); err != nil {
 		return nil, err
 	}
 
@@ -101,7 +104,7 @@ func (b *GoogleBreaker) do(fn com.HandleFunc, fallback com.FallbackFunc, accepta
 	var err error
 
 	// If accept returns an error, reject the execution and return the error.
-	if err = b.accept(); err != nil {
+	if err = b.accept(utils.GenerateRandomRatio()); err != nil {
 		b.Reject(err)
 		if fallback != nil {
 			return fallback(err)
@@ -121,18 +124,22 @@ func (b *GoogleBreaker) do(fn com.HandleFunc, fallback com.FallbackFunc, accepta
 	return err
 }
 
+// Do executes the function and returns the error.
 func (b *GoogleBreaker) Do(fn com.HandleFunc) error {
 	return b.do(fn, nil, DefaultAcceptableFunc)
 }
 
+// DoWithAcceptable executes the function with the given acceptable function and returns the error.
 func (b *GoogleBreaker) DoWithAcceptable(fn com.HandleFunc, acceptable com.AcceptableFunc) error {
 	return b.do(fn, nil, acceptable)
 }
 
+// DoWithFallback executes the function with the given fallback function and returns the error.
 func (b *GoogleBreaker) DoWithFallback(fn com.HandleFunc, fallback com.FallbackFunc) error {
 	return b.do(fn, fallback, DefaultAcceptableFunc)
 }
 
+// DoWithFallbackAcceptable executes the function with the given fallback and acceptable functions and returns the error.
 func (b *GoogleBreaker) DoWithFallbackAcceptable(fn com.HandleFunc, fallback com.FallbackFunc, acceptable com.AcceptableFunc) error {
 	return b.do(fn, fallback, acceptable)
 }

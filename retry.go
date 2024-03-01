@@ -29,7 +29,9 @@ func (r *result) Count() int64 {
 type emptyRetry struct{}
 
 func (r *emptyRetry) TryOnConflict(fn com.RetryableFunc) com.RetryResult {
-	return &result{}
+	re := result{count: 1}
+	re.data, re.tryError = fn()
+	return &re
 }
 
 func NewEmptyRetry() com.Retry {
