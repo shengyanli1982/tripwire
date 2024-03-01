@@ -1,7 +1,6 @@
 package circuitbreaker
 
 import (
-	"errors"
 	"math"
 	"sync"
 
@@ -14,10 +13,6 @@ const (
 	// Define the default floating-point precision as 3
 	DefaultFloatingPrecision = 3
 )
-
-// 定义服务不可用的错误
-// Define the error for service unavailable
-var ErrorServiceUnavailable = errors.New("service unavailable") // 服务不可用的错误
 
 // DefaultAcceptableFunc 是默认的可接受函数。
 // DefaultAcceptableFunc is the default acceptable function.
@@ -90,8 +85,8 @@ func (b *GoogleBreaker) accept(ratio float64) error {
 
 	// 如果熔丝比率大于随机浮点数，返回服务不可用的错误。
 	// If the fuse ratio is greater than the random float64, return the error of service unavailable.
-	b.config.callback.OnAccept(ErrorServiceUnavailable, refFactor)
-	return ErrorServiceUnavailable
+	b.config.callback.OnAccept(com.ErrorServiceUnavailable, refFactor)
+	return com.ErrorServiceUnavailable
 }
 
 // MarkFailure 标记一个失败的执行，并调用失败回调

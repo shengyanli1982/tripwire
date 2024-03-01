@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	com "github.com/shengyanli1982/tripwire/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,12 +26,12 @@ func TestGoogleBreaker_Accept(t *testing.T) {
 	// Test the Accept function, the success rate is 1/101, trigger the ErrorServiceUnavailable error
 	// fuse ratio is 0.926, must greater than 0.4
 	err = breaker.accept(0.4)
-	assert.ErrorIs(t, err, ErrorServiceUnavailable, "unexpected error returned by accept")
+	assert.ErrorIs(t, err, com.ErrorServiceUnavailable, "unexpected error returned by accept")
 
 	// Test the Accept function, the success rate is 1/101, trigger the ErrorServiceUnavailable error
 	// fuse ratio is 0.926, equal the random float64
 	err = breaker.accept(0.926)
-	assert.ErrorIs(t, err, ErrorServiceUnavailable, "unexpected error returned by accept")
+	assert.ErrorIs(t, err, com.ErrorServiceUnavailable, "unexpected error returned by accept")
 
 	// create a new GoogleBreaker
 	breaker = NewGoogleBreaker(nil)
@@ -228,8 +229,8 @@ func TestGoogleBreaker_DoWithFallbackAcceptable_FallbackTrigger(t *testing.T) {
 	breaker := NewGoogleBreaker(nil)
 	defer breaker.Stop()
 
-	// Simulate running 100 times, failed
-	for i := 0; i < 100; i++ {
+	// Simulate running 10000 times, failed
+	for i := 0; i < 10000; i++ {
 		err := breaker.rwin.Add(0)
 		assert.Nil(t, err)
 	}

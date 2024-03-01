@@ -1,9 +1,10 @@
 package rolling
 
 import (
-	"errors"
 	"sync"
 	"time"
+
+	com "github.com/shengyanli1982/tripwire/common"
 )
 
 const (
@@ -25,10 +26,6 @@ var (
 	// The maximum rolling window size is 600 slots, i.e., 10 minutes.
 	maxRollingWindowSize = 10 * 60
 )
-
-// 滚动窗口停止的错误。
-// Error when the rolling window is stopped.
-var ErrorRollingWindowStopped = errors.New("rolling window stopped")
 
 // RollingWindow 是一个滚动窗口。
 // RollingWindow is a rolling window.
@@ -166,7 +163,7 @@ func (w *RollingWindow) Add(value float64) error {
 	// 如果滚动窗口没有运行，返回一个错误。
 	// If the rolling window is not running, return an error.
 	if !w.runing {
-		return ErrorRollingWindowStopped
+		return com.ErrorRollingWindowStopped
 	}
 
 	// 更新滚动窗口。
@@ -192,7 +189,7 @@ func (w *RollingWindow) calculateStats() (float64, uint64, error) {
 	// 如果滚动窗口没有运行，返回一个错误。
 	// If the rolling window is not running, return an error.
 	if !w.runing {
-		return 0, 0, ErrorRollingWindowStopped
+		return 0, 0, com.ErrorRollingWindowStopped
 	}
 
 	// 更新滚动窗口。

@@ -1,4 +1,4 @@
-package tripwire
+package common
 
 type (
 	// AcceptableFunc 是一个检查错误是否可接受的函数。
@@ -52,6 +52,10 @@ type Breaker interface {
 	// DoWithFallbackAcceptable 执行函数并返回错误。
 	// DoWithFallbackAcceptable executes the function and returns the error.
 	DoWithFallbackAcceptable(fn HandleFunc, fallback FallbackFunc, acceptable AcceptableFunc) error
+
+	// Stop 停止熔断器。
+	// Stop stops the circuit breaker.
+	Stop()
 }
 
 type RetryResult interface {
@@ -76,14 +80,4 @@ type Retry interface {
 	// TryOnConflict 执行函数并返回重试结果。
 	// TryOnConflict executes the function and returns the retry result.
 	TryOnConflict(fn RetryableFunc) RetryResult
-}
-
-type Throttle interface {
-	// Allow 检查节流器是否允许执行。
-	// Allow checks if the throttle allows the execution.
-	Allow() (Notifier, error)
-
-	// Do 执行函数并返回错误。
-	// Do executes the function and returns the error.
-	Do(fn HandleFunc, fallback FallbackFunc, acceptable AcceptableFunc) error
 }
