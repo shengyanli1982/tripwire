@@ -100,9 +100,9 @@ func main() {
 		fmt.Printf("#Case4: Failed execution with acceptable.\n") // 如果没有错误，打印执行失败的消息
 	}
 
-	// 模拟运行10000次，失败
-	// Simulate running 10000 times, failed
-	for i := 0; i < 10000; i++ {
+	// 模拟运行10次，失败
+	// Simulate running 10 times, failed
+	for i := 0; i < 10; i++ {
 		_ = breaker.Do(func() error {
 			return execError // 返回执行错误
 		})

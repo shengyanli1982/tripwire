@@ -58,14 +58,44 @@ type Breaker interface {
 	Stop()
 }
 
-type RetryResult interface {
-	// TryError 返回结果的重试错误。
-	// TryError returns the retry error of the result.
+// RetryResult 接口定义了执行结果的相关方法
+// The RetryResult interface defines methods related to execution results
+type RetryResult = interface {
+	// Data 方法返回执行结果的数据
+	// The Data method returns the data of the execution result
+	Data() any
+
+	// TryError 方法返回尝试执行时的错误
+	// The TryError method returns the error when trying to execute
 	TryError() error
+
+	// ExecErrors 方法返回所有执行错误的列表
+	// The ExecErrors method returns a list of all execution errors
+	ExecErrors() []error
+
+	// IsSuccess 方法返回执行是否成功
+	// The IsSuccess method returns whether the execution was successful
+	IsSuccess() bool
+
+	// LastExecError 方法返回最后一次执行的错误
+	// The LastExecError method returns the error of the last execution
+	LastExecError() error
+
+	// FirstExecError 方法返回第一次执行的错误
+	// The FirstExecError method returns the error of the first execution
+	FirstExecError() error
+
+	// ExecErrorByIndex 方法返回指定索引处的执行错误
+	// The ExecErrorByIndex method returns the execution error at the specified index
+	ExecErrorByIndex(idx int) error
+
+	// Count 方法返回执行的次数
+	// The Count method returns the number of executions
+	Count() int64
 }
 
 type Retry interface {
-	// TryOnConflict 执行函数并返回重试结果。
-	// TryOnConflict executes the function and returns the retry result.
-	TryOnConflictInterface(fn RetryableFunc) RetryResult
+	// TryOnConflictVal 执行函数并返回重试结果。
+	// TryOnConflictVal executes the function and returns the retry result.
+	TryOnConflictVal(fn RetryableFunc) RetryResult
 }

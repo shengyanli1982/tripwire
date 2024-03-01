@@ -10,6 +10,7 @@ type result struct {
 	count    uint64 // 计数器 Counter
 	data     any    // 数据 Data
 	tryError error  // 错误信息 Error information
+	errs     []error
 }
 
 // Data 方法返回结果中的数据
@@ -36,13 +37,46 @@ func (r *result) Count() int64 {
 	return int64(r.count)
 }
 
+// ExecErrors 方法返回结果中的所有错误
+// The ExecErrors method returns all errors in the result
+func (r *result) ExecErrors() []error {
+	return r.errs
+}
+
+// LastExecError 方法返回结果中的最后一个错误
+// The LastExecError method returns the last error in the result
+func (r *result) LastExecError() error {
+	if len(r.errs) > 0 {
+		return r.errs[len(r.errs)-1]
+	}
+	return nil
+}
+
+// FirstExecError 方法返回结果中的第一个错误
+// The FirstExecError method returns the first error in the result
+func (r *result) FirstExecError() error {
+	if len(r.errs) > 0 {
+		return r.errs[0]
+	}
+	return nil
+}
+
+// ExecErrorByIndex 方法返回结果中指定索引处的错误
+// The ExecErrorByIndex method returns the error at the specified index in the result
+func (r *result) ExecErrorByIndex(idx int) error {
+	if idx >= 0 && idx < len(r.errs) {
+		return r.errs[idx]
+	}
+	return nil
+}
+
 // 定义空重试结构体
 // Define the emptyRetry struct
 type emptyRetry struct{}
 
-// TryOnConflict 方法尝试执行给定的函数，并返回结果
-// The TryOnConflict method tries to execute the given function and returns the result
-func (r *emptyRetry) TryOnConflictInterface(fn com.RetryableFunc) com.RetryResult {
+// TryOnConflictVal 方法尝试执行给定的函数，并返回结果
+// The TryOnConflictVal method tries to execute the given function and returns the result
+func (r *emptyRetry) TryOnConflictVal(fn com.RetryableFunc) com.RetryResult {
 	re := result{count: 1}
 	re.data, re.tryError = fn()
 	return &re

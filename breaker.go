@@ -34,7 +34,7 @@ func (c *CircuitBreaker) Stop() {
 // DoWithFallbackAcceptable 使用回退和可接受函数执行函数
 // DoWithFallbackAcceptable executes the function with fallback and acceptable functions
 func (c *CircuitBreaker) DoWithFallbackAcceptable(fn com.HandleFunc, fallback com.FallbackFunc, acceptable com.AcceptableFunc) error {
-	result := c.config.retry.TryOnConflictInterface(func() (any, error) {
+	result := c.config.retry.TryOnConflictVal(func() (any, error) {
 		return nil, c.config.breaker.DoWithFallbackAcceptable(fn, fallback, acceptable)
 	})
 	return result.TryError()
@@ -43,7 +43,7 @@ func (c *CircuitBreaker) DoWithFallbackAcceptable(fn com.HandleFunc, fallback co
 // DoWithFallback 使用回退函数执行函数
 // DoWithFallback executes the function with fallback function
 func (c *CircuitBreaker) DoWithFallback(fn com.HandleFunc, fallback com.FallbackFunc) error {
-	result := c.config.retry.TryOnConflictInterface(func() (any, error) {
+	result := c.config.retry.TryOnConflictVal(func() (any, error) {
 		return nil, c.config.breaker.DoWithFallback(fn, fallback)
 	})
 	return result.TryError()
@@ -52,7 +52,7 @@ func (c *CircuitBreaker) DoWithFallback(fn com.HandleFunc, fallback com.Fallback
 // DoWithAcceptable 使用可接受函数执行函数
 // DoWithAcceptable executes the function with acceptable function
 func (c *CircuitBreaker) DoWithAcceptable(fn com.HandleFunc, acceptable com.AcceptableFunc) error {
-	result := c.config.retry.TryOnConflictInterface(func() (any, error) {
+	result := c.config.retry.TryOnConflictVal(func() (any, error) {
 		return nil, c.config.breaker.DoWithAcceptable(fn, acceptable)
 	})
 	return result.TryError()
@@ -61,7 +61,7 @@ func (c *CircuitBreaker) DoWithAcceptable(fn com.HandleFunc, acceptable com.Acce
 // Do 执行函数
 // Do executes the function
 func (c *CircuitBreaker) Do(fn com.HandleFunc) error {
-	result := c.config.retry.TryOnConflictInterface(func() (any, error) {
+	result := c.config.retry.TryOnConflictVal(func() (any, error) {
 		return nil, c.config.breaker.Do(fn)
 	})
 	return result.TryError()
