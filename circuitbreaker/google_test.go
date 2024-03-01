@@ -8,39 +8,71 @@ import (
 )
 
 func TestGoogleBreaker_Accept(t *testing.T) {
-	// Test case 1: Fuse ratio <= random ratio
-	config := NewConfig().WithK(0.2).WithProtected(5).WithStateWindow(10)
-	breaker := NewGoogleBreaker(config)
-	for i := 0; i < 20; i++ {
-		_ = breaker.rwin.Add(1)
-	}
-	for i := 0; i < 2; i++ {
-		_ = breaker.rwin.Add(0)
-	}
-	err := breaker.accept(0.3)
-	assert.NoError(t, err, "Expected no error")
+	// create a new GoogleBreaker
+	breaker := NewGoogleBreaker(nil)
+	defer breaker.Stop()
 
-	// Test case 2: Fuse ratio > random ratio
-	config = NewConfig().WithK(2).WithProtected(5).WithStateWindow(10)
-	breaker = NewGoogleBreaker(config)
-	for i := 0; i < 2; i++ {
-		_ = breaker.rwin.Add(1)
+	// Simulate running 100 times, failed
+	for i := 0; i < 100; i++ {
+		err := breaker.rwin.Add(0)
+		assert.Nil(t, err)
 	}
-	for i := 0; i < 20; i++ {
-		_ = breaker.rwin.Add(0)
+
+	// Simulate running 1 time, success
+	err := breaker.rwin.Add(1)
+	assert.Nil(t, err)
+
+	// Test the Accept function, the success rate is 1/101, trigger the ErrorServiceUnavailable error
+	// fuse ratio is 0.926, must greater than 0.4
+	err = breaker.accept(0.4)
+	assert.ErrorIs(t, err, ErrorServiceUnavailable, "unexpected error returned by accept")
+
+	// Test the Accept function, the success rate is 1/101, trigger the ErrorServiceUnavailable error
+	// fuse ratio is 0.926, equal the random float64
+	err = breaker.accept(0.926)
+	assert.ErrorIs(t, err, ErrorServiceUnavailable, "unexpected error returned by accept")
+
+	// create a new GoogleBreaker
+	breaker = NewGoogleBreaker(nil)
+	defer breaker.Stop()
+
+	// Simulate running 100 times, success
+	for i := 0; i < 100; i++ {
+		err := breaker.rwin.Add(1)
+		assert.Nil(t, err)
 	}
-	err = breaker.accept(0.5)
-	assert.ErrorIs(t, err, ErrorServiceUnavailable, "Expected error")
+
+	// Simulate running 1 time, failed
+	err = breaker.rwin.Add(0)
+	assert.Nil(t, err)
+
+	// Test the Accept function, the success rate is 100/101, no error
+	err = breaker.accept(0.4)
+	assert.NoError(t, err, "unexpected error returned by accept")
 }
 
 func TestGoogleBreaker_Allow(t *testing.T) {
 	breaker := NewGoogleBreaker(nil)
+	defer breaker.Stop()
 
 	// Test allowing execution
 	notifier, err := breaker.Allow()
 	assert.NoError(t, err, "Unexpected error")
+	assert.NotNil(t, notifier, "Expected a notifier, but got nil")
 
-	// Verify the returned notifier
+	// Simulate running 100 times, success
+	for i := 0; i < 100; i++ {
+		err := breaker.rwin.Add(1)
+		assert.Nil(t, err)
+	}
+
+	// Simulate running 1 time, failed
+	err = breaker.rwin.Add(0)
+	assert.Nil(t, err)
+
+	// Test allowing execution
+	notifier, err = breaker.Allow()
+	assert.NoError(t, err, "Unexpected error")
 	assert.NotNil(t, notifier, "Expected a notifier, but got nil")
 
 	// Test rejecting execution
@@ -48,8 +80,8 @@ func TestGoogleBreaker_Allow(t *testing.T) {
 
 	// Test values execution
 	v, c, _ := breaker.history()
-	assert.Equal(t, float64(0), v, "Expected 1, but got %v", v)
-	assert.Equal(t, uint64(1), c, "Expected 1, but got %v", c)
+	assert.Equal(t, float64(100), v, "Expected 100, but got %v", v)
+	assert.Equal(t, uint64(102), c, "Expected 102, but got %v", c)
 
 	// Test allowing execution
 	notifier, err = breaker.Allow()
@@ -63,17 +95,16 @@ func TestGoogleBreaker_Allow(t *testing.T) {
 
 	// Test values execution
 	v, c, _ = breaker.history()
-	assert.Equal(t, float64(1), v, "Expected 1, but got %v", v)
-	assert.Equal(t, uint64(2), c, "Expected 1, but got %v", c)
+	assert.Equal(t, float64(101), v, "Expected 101, but got %v", v)
+	assert.Equal(t, uint64(103), c, "Expected 103, but got %v", c)
 }
 
 func TestGoogleBreaker_DoWithFallbackAcceptable(t *testing.T) {
-	var (
-		execError = errors.New("execution error")
-		// fbError   = errors.New("fallback error")
-	)
+	var execError = errors.New("execution error")
 
+	// create a new GoogleBreaker
 	breaker := NewGoogleBreaker(nil)
+	defer breaker.Stop()
 
 	// Test case 1: Successful execution with acceptable result
 	fn := func() error {
@@ -121,6 +152,7 @@ func TestGoogleBreaker_DoWithFallbackAcceptable(t *testing.T) {
 
 func TestGoogleBreaker_DoWithFallback(t *testing.T) {
 	breaker := NewGoogleBreaker(nil)
+	defer breaker.Stop()
 
 	// Test case 1: Successful execution
 	fn := func() error {
@@ -143,6 +175,7 @@ func TestGoogleBreaker_DoWithFallback(t *testing.T) {
 
 func TestGoogleBreaker_DoWithAcceptable(t *testing.T) {
 	breaker := NewGoogleBreaker(nil)
+	defer breaker.Stop()
 
 	// Test case 1: Successful execution
 	fn := func() error {
@@ -168,6 +201,7 @@ func TestGoogleBreaker_DoWithAcceptable(t *testing.T) {
 
 func TestGoogleBreaker_Do(t *testing.T) {
 	breaker := NewGoogleBreaker(nil)
+	defer breaker.Stop()
 
 	// Test case 1: Successful execution
 	fn := func() error {

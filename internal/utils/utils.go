@@ -2,8 +2,6 @@ package utils
 
 import (
 	"math"
-	"math/rand"
-	"time"
 )
 
 // FindNextPowerOfTwo 函数找到大于或等于 n 的最小的 2 的幂
@@ -36,14 +34,4 @@ func Round(f float64, n int) float64 {
 	// 返回四舍五入后的结果
 	// Return the result after rounding
 	return math.Round(f*pow) / pow
-}
-
-// 创建一个新的随机数生成器
-// Create a new random number generator
-var random = rand.New(rand.NewSource(time.Now().UnixNano()))
-
-// GenerateRandomRatio 函数生成一个 [0,1) 之间的随机浮点数
-// The GenerateRandomRatio function generates a random float number between [0,1)
-func GenerateRandomRatio() float64 {
-	return random.Float64()
 }

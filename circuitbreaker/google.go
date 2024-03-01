@@ -7,13 +7,12 @@ import (
 
 	com "github.com/shengyanli1982/tripwire/common"
 	rw "github.com/shengyanli1982/tripwire/internal/rolling"
-	"github.com/shengyanli1982/tripwire/internal/utils"
 )
 
 const (
-	// 定义默认的浮点数精度为2
-	// Define the default floating-point precision as 2
-	DefaultFloatingPrecision = 2
+	// 定义默认的浮点数精度为 3
+	// Define the default floating-point precision as 3
+	DefaultFloatingPrecision = 3
 )
 
 // 定义服务不可用的错误
@@ -34,6 +33,7 @@ type GoogleBreaker struct {
 	config *Config           // 熔断器的配置 Config of the breaker
 	rwin   *rw.RollingWindow // 滚动窗口 Rolling window
 	once   sync.Once         // 用于确保某个操作只执行一次 The sync.Once to ensure that an operation is executed only once
+	sr     *SafeRandom       // 安全的随机数生成器 Safe random number generator
 }
 
 // NewGoogleBreaker 返回一个新的熔断器。
@@ -42,6 +42,7 @@ func NewGoogleBreaker(conf *Config) *GoogleBreaker {
 	conf = isConfigValid(conf)
 	return &GoogleBreaker{
 		config: conf,
+		sr:     NewSafeRandom(),
 		rwin:   rw.NewRollingWindow(conf.stateWindow),
 		once:   sync.Once{},
 	}
@@ -73,22 +74,22 @@ func (b *GoogleBreaker) accept(ratio float64) error {
 
 	// 计算加权接受。
 	// Calculate the weighted accepts.
-	weightedAccepted := b.config.k * accepted
+	weightedAcceptes := b.config.k * accepted
 
 	// 计算熔丝比率。
 	// Calculate the fuse ratio.
-	refFactor := utils.Round((float64(total-uint64(b.config.protected))-weightedAccepted)/float64(total+1), DefaultFloatingPrecision)
+	refFactor := (float64(int64(total)-int64(b.config.protected)) - weightedAcceptes) / float64(total+1)
 	fuseRatio := math.Max(0, refFactor)
 
-	// 如果熔丝比率小于或等于0，或者熔丝比率小于0和1之间的随机浮点数，返回nil。
-	// If the fuse ratio is less than or equal to 0, or if the fuse ratio is less than a random float64 between 0 and 1, return nil.
-	if fuseRatio <= 0 || fuseRatio >= utils.Round(ratio, DefaultFloatingPrecision) {
+	// 如果熔丝比率小于或等于0，或者熔丝比率大于等于0和1之间的随机浮点数，返回nil。
+	// If the fuse ratio is less than or equal to 0, or if the fuse ratio is greater than or equal a random float64 between 0 and 1, return nil.
+	if fuseRatio <= 0 || ratio >= fuseRatio {
 		b.config.callback.OnAccept(nil, refFactor)
 		return nil
 	}
 
-	// 否则，触发熔断器。
-	// Otherwise, trigger the breaker.
+	// 如果熔丝比率大于随机浮点数，返回服务不可用的错误。
+	// If the fuse ratio is greater than the random float64, return the error of service unavailable.
 	b.config.callback.OnAccept(ErrorServiceUnavailable, refFactor)
 	return ErrorServiceUnavailable
 }
@@ -110,7 +111,7 @@ func (b *GoogleBreaker) Accept() {
 func (b *GoogleBreaker) Allow() (com.Notifier, error) {
 	// 接受执行。
 	// Accept the execution.
-	if err := b.accept(utils.GenerateRandomRatio()); err != nil {
+	if err := b.accept(b.sr.Float64()); err != nil {
 		return nil, err
 	}
 
@@ -126,7 +127,7 @@ func (b *GoogleBreaker) do(fn com.HandleFunc, fallback com.FallbackFunc, accepta
 
 	// 如果 accept 返回错误，拒绝执行并返回错误。
 	// If accept returns an error, reject the execution and return the error.
-	if err = b.accept(utils.GenerateRandomRatio()); err != nil {
+	if err = b.accept(b.sr.Float64()); err != nil {
 		b.Reject(err)
 		if fallback != nil {
 			return fallback(err)
