@@ -76,7 +76,7 @@ func TestGoogleBreaker_Allow(t *testing.T) {
 	assert.NotNil(t, notifier, "Expected a notifier, but got nil")
 
 	// Test rejecting execution
-	breaker.Reject(errors.New("test"))
+	notifier.Reject(errors.New("test"))
 
 	// Test values execution
 	v, c, _ := breaker.history()
@@ -91,7 +91,7 @@ func TestGoogleBreaker_Allow(t *testing.T) {
 	assert.NotNil(t, notifier, "Expected a notifier, but got nil")
 
 	// Test accepting execution
-	breaker.Accept()
+	notifier.Accept()
 
 	// Test values execution
 	v, c, _ = breaker.history()
@@ -275,4 +275,52 @@ func TestGoogleBreaker_DoWithFallbackAcceptable_FallbackTrigger(t *testing.T) {
 
 	err = breaker.DoWithFallbackAcceptable(fn, fallback, acceptable)
 	assert.ErrorIs(t, err, fbError, "Unexpected error")
+}
+
+type testCallback struct {
+	factor float64
+	sc, fc int
+}
+
+func (t *testCallback) OnSuccess(opterr error) {
+	t.sc += 1
+}
+
+func (t *testCallback) OnFailed(opterr, reason error) {
+	t.fc += 1
+}
+
+func (t *testCallback) OnAccept(reason error, refFactor float64) {
+	t.factor = refFactor
+}
+
+func newTestCallback() Callback {
+	return &testCallback{}
+}
+
+func TestGoogleBreaker_Callback(t *testing.T) {
+	config := NewConfig().WithCallback(newTestCallback())
+	breaker := NewGoogleBreaker(config)
+	defer breaker.Stop()
+
+	// Test allowing execution
+	notifier, err := breaker.Allow()
+	assert.NoError(t, err, "Unexpected error")
+	assert.NotNil(t, notifier, "Expected a notifier, but got nil")
+
+	// callback
+	cb := breaker.config.callback.(*testCallback)
+
+	// Test case 1: OnSuccess
+	notifier.Accept()
+	assert.Equal(t, 1, cb.sc, "Unexpected success count")
+
+	// Test case 2: OnFailed
+	notifier.Reject(errors.New("test"))
+	assert.Equal(t, 1, cb.fc, "Unexpected failed count")
+
+	// Test case 3: OnAccept
+	err = breaker.accept(0.5)
+	assert.NoError(t, err, "Unexpected error")
+	assert.Equal(t, -1.5, cb.factor, "Unexpected reference factor")
 }
