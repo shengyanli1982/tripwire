@@ -76,7 +76,7 @@ func TestGoogleBreaker_Allow(t *testing.T) {
 	assert.NotNil(t, notifier, "Expected a notifier, but got nil")
 
 	// Test rejecting execution
-	notifier.Reject(errors.New("test"))
+	notifier.MarkFailure(errors.New("test"))
 
 	// Test values execution
 	v, c, _ := breaker.history()
@@ -91,7 +91,7 @@ func TestGoogleBreaker_Allow(t *testing.T) {
 	assert.NotNil(t, notifier, "Expected a notifier, but got nil")
 
 	// Test accepting execution
-	notifier.Accept()
+	notifier.MarkSuccess()
 
 	// Test values execution
 	v, c, _ = breaker.history()
@@ -286,7 +286,7 @@ func (t *testCallback) OnSuccess(opterr error) {
 	t.sc += 1
 }
 
-func (t *testCallback) OnFailed(opterr, reason error) {
+func (t *testCallback) OnFailure(opterr, reason error) {
 	t.fc += 1
 }
 
@@ -312,11 +312,11 @@ func TestGoogleBreaker_Callback(t *testing.T) {
 	cb := breaker.config.callback.(*testCallback)
 
 	// Test case 1: OnSuccess
-	notifier.Accept()
+	notifier.MarkSuccess()
 	assert.Equal(t, 1, cb.sc, "Unexpected success count")
 
-	// Test case 2: OnFailed
-	notifier.Reject(errors.New("test"))
+	// Test case 2: OnFailure
+	notifier.MarkFailure(errors.New("test"))
 	assert.Equal(t, 1, cb.fc, "Unexpected failed count")
 
 	// Test case 3: OnAccept

@@ -21,13 +21,13 @@ type (
 // Notifier 是一个通知 Breaker 执行结果的接口。
 // Notifier is an interface that notifies the Breaker of the execution result.
 type Notifier interface {
-	// Accept 告诉 Breaker 调用成功。
-	// Accept tells the Breaker that the call is successful.
-	Accept()
+	// MarkSuccess 告诉 Breaker 调用成功。
+	// MarkSuccess tells the Breaker that the call is successful.
+	MarkSuccess()
 
-	// Reject 告诉 Breaker 调用失败。
-	// Reject tells the Breaker that the call is failed.
-	Reject(reason error)
+	// MarkFailure 告诉 Breaker 调用失败。
+	// MarkFailure tells the Breaker that the call is failed.
+	MarkFailure(reason error)
 }
 
 // Breaker 是一个表示熔断器的接口。

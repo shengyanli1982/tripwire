@@ -94,16 +94,18 @@ func (b *GoogleBreaker) accept(ratio float64) error {
 	return ErrorServiceUnavailable
 }
 
-// Reject 拒绝执行。
-// Reject rejects the execution.
-func (b *GoogleBreaker) Reject(reason error) {
-	b.config.callback.OnFailed(b.rwin.Add(0), reason) // 添加一个失败的执行，并调用失败回调
+// MarkFailure 标记一个失败的执行，并调用失败回调
+// MarkFailure marks a failed execution and calls the failure callback
+func (b *GoogleBreaker) MarkFailure(reason error) {
+	b.config.callback.OnFailure(b.rwin.Add(0), reason) // 添加一个失败的执行，并调用失败回调
+	// Add a failed execution and call the failure callback
 }
 
-// Accept 接受执行。
-// Accept accepts the execution.
-func (b *GoogleBreaker) Accept() {
+// MarkSuccess 标记一个成功的执行，并调用成功回调
+// MarkSuccess marks a successful execution and calls the success callback
+func (b *GoogleBreaker) MarkSuccess() {
 	b.config.callback.OnSuccess(b.rwin.Add(1)) // 添加一个成功的执行，并调用成功回调
+	// Add a successful execution and call the success callback
 }
 
 // Allow 检查熔断器是否允许执行。
@@ -128,7 +130,7 @@ func (b *GoogleBreaker) do(fn com.HandleFunc, fallback com.FallbackFunc, accepta
 	// 如果 accept 返回错误，拒绝执行并返回错误。
 	// If accept returns an error, reject the execution and return the error.
 	if err = b.accept(b.sr.Float64()); err != nil {
-		b.Reject(err)
+		b.MarkFailure(err)
 		if fallback != nil {
 			return fallback(err)
 		}
@@ -139,9 +141,9 @@ func (b *GoogleBreaker) do(fn com.HandleFunc, fallback com.FallbackFunc, accepta
 	// Exec the handle function, if the error is acceptable, accept the execution, otherwise reject the execution.
 	err = fn()
 	if acceptable(err) {
-		b.Accept()
+		b.MarkSuccess()
 	} else {
-		b.Reject(err)
+		b.MarkFailure(err)
 	}
 
 	// 返回错误。

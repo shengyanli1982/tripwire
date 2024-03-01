@@ -7,9 +7,9 @@ type Callback interface {
 	// OnSuccess is called when the call is successful.
 	OnSuccess(opterr error)
 
-	// OnFailed 在调用失败时被调用。
-	// OnFailed is called when the call is failed.
-	OnFailed(opterr, reason error)
+	// OnFailure 在调用失败时被调用。
+	// OnFailure is called when the call is failed.
+	OnFailure(opterr, reason error)
 
 	// OnAccept 在调用被接受时被调用。
 	// OnAccept is called when the call is accepted.
@@ -24,9 +24,9 @@ type emptyCallback struct{}
 // OnSuccess is nop called when the call is successful.
 func (emptyCallback) OnSuccess(opterr error) {}
 
-// OnFailed 是在调用失败时被调用的空操作。
-// OnFailed is nop called when the call is failed.
-func (emptyCallback) OnFailed(opterr, reason error) {}
+// OnFailure 是在调用失败时被调用的空操作。
+// OnFailure is nop called when the call is failed.
+func (emptyCallback) OnFailure(opterr, reason error) {}
 
 // OnAccept 是在调用被接受时被调用的空操作。
 // OnAccept is nop called when the call is accepted.
