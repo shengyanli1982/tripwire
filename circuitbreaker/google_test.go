@@ -138,7 +138,7 @@ func TestGoogleBreaker_DoWithFallbackAcceptable(t *testing.T) {
 		return err == execError
 	}
 	err = breaker.DoWithFallbackAcceptable(fn, fallback, acceptable)
-	assert.ErrorIs(t, err, execError, "Unexpected error")
+	assert.NoError(t, err, "Unexpected error")
 
 	// Test case 4: Failed execution with unacceptable result
 	fn = func() error {

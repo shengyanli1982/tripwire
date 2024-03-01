@@ -42,7 +42,7 @@ type emptyRetry struct{}
 
 // TryOnConflict 方法尝试执行给定的函数，并返回结果
 // The TryOnConflict method tries to execute the given function and returns the result
-func (r *emptyRetry) TryOnConflict(fn com.RetryableFunc) com.RetryResult {
+func (r *emptyRetry) TryOnConflictInterface(fn com.RetryableFunc) com.RetryResult {
 	re := result{count: 1}
 	re.data, re.tryError = fn()
 	return &re

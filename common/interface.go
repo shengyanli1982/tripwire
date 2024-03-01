@@ -59,25 +59,13 @@ type Breaker interface {
 }
 
 type RetryResult interface {
-	// Data 返回结果的数据。
-	// Data returns the data of the result.
-	Data() any
-
 	// TryError 返回结果的重试错误。
 	// TryError returns the retry error of the result.
 	TryError() error
-
-	// IsSuccess 检查重试是否成功。
-	// IsSuccess checks if the retry is successful.
-	IsSuccess() bool
-
-	// Count 返回结果的重试次数。
-	// Count returns the retry count of the result.
-	Count() int64
 }
 
 type Retry interface {
 	// TryOnConflict 执行函数并返回重试结果。
 	// TryOnConflict executes the function and returns the retry result.
-	TryOnConflict(fn RetryableFunc) RetryResult
+	TryOnConflictInterface(fn RetryableFunc) RetryResult
 }

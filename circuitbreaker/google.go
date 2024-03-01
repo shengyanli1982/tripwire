@@ -125,25 +125,44 @@ func (b *GoogleBreaker) do(fn com.HandleFunc, fallback com.FallbackFunc, accepta
 	// 如果 accept 返回错误，拒绝执行并返回错误。
 	// If accept returns an error, reject the execution and return the error.
 	if err = b.accept(b.sr.Float64()); err != nil {
+		// 标记执行失败
+		// Mark the execution as failed
 		b.MarkFailure(err)
+
+		// 如果提供了回退函数，执行回退函数。
+		// If a fallback function is provided, execute the fallback function.
 		if fallback != nil {
 			return fallback(err)
 		}
+
+		// 返回错误。
+		// Return the error.
 		return err
 	}
 
-	// 执行处理函数，如果错误可接受，接受执行，否则拒绝执行。
-	// Exec the handle function, if the error is acceptable, accept the execution, otherwise reject the execution.
+	// 执行函数
+	// Execute the function
 	err = fn()
-	if acceptable(err) {
-		b.MarkSuccess()
-	} else {
-		b.MarkFailure(err)
-	}
 
-	// 返回错误。
-	// Return the error.
-	return err
+	// 如果错误可接受，标记执行成功，否则标记执行失败并返回错误。
+	// If the error is acceptable, mark the execution as successful, otherwise mark the execution as failed and return the error.
+	if acceptable(err) {
+		// 标记执行成功
+		// Mark the execution as successful
+		b.MarkSuccess()
+
+		// 正常返回
+		// Return nil
+		return nil
+	} else {
+		// 标记执行失败
+		// Mark the execution as failed
+		b.MarkFailure(err)
+
+		// 返回错误。
+		// Return the error.
+		return err
+	}
 }
 
 // Do 执行函数并返回错误。

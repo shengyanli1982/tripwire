@@ -13,7 +13,7 @@ type Callback interface {
 
 	// OnAccept 在调用被接受时被调用。
 	// OnAccept is called when the call is accepted.
-	OnAccept(reason error, refFactor float64)
+	OnAccept(reason error, factor float64)
 }
 
 // emptyCallback 是熔断器的空回调。
@@ -30,7 +30,7 @@ func (emptyCallback) OnFailure(opterr, reason error) {}
 
 // OnAccept 是在调用被接受时被调用的空操作。
 // OnAccept is nop called when the call is accepted.
-func (emptyCallback) OnAccept(reason error, refFactor float64) {}
+func (emptyCallback) OnAccept(reason error, factor float64) {}
 
 // NewEmptyCallback 返回一个新的熔断器空回调。
 // NewEmptyCallback returns a new empty callback for the breaker.
