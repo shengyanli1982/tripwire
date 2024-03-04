@@ -28,10 +28,14 @@ func TestGoogleBreaker_Accept(t *testing.T) {
 	err = breaker.accept(0.4)
 	assert.ErrorIs(t, err, com.ErrorServiceUnavailable, "unexpected error returned by accept")
 
-	// Test the Accept function, the success rate is 1/101, trigger the ErrorServiceUnavailable error
+	// Test the Accept function, the success rate is 1/101, if fuse ratio greater or equal 0.926, no error
 	// fuse ratio is 0.926, equal the random float64
 	err = breaker.accept(0.926)
-	assert.ErrorIs(t, err, com.ErrorServiceUnavailable, "unexpected error returned by accept")
+	assert.NoError(t, err, "unexpected error returned by accept")
+
+	// fuse ratio is 0.96, equal the random float64
+	err = breaker.accept(0.96)
+	assert.NoError(t, err, "unexpected error returned by accept")
 
 	// create a new GoogleBreaker
 	breaker = NewGoogleBreaker(nil)
@@ -279,7 +283,7 @@ func TestGoogleBreaker_DoWithFallbackAcceptable_FallbackTrigger(t *testing.T) {
 }
 
 type testCallback struct {
-	factor float64
+	fuse   float64
 	sc, fc int
 }
 
@@ -292,7 +296,7 @@ func (t *testCallback) OnFailure(opterr, reason error) {
 }
 
 func (t *testCallback) OnAccept(reason error, fuse, failure float64) {
-	t.factor = fuse
+	t.fuse = fuse
 }
 
 func newTestCallback() Callback {
@@ -323,5 +327,5 @@ func TestGoogleBreaker_Callback(t *testing.T) {
 	// Test case 3: OnAccept
 	err = breaker.accept(0.5)
 	assert.NoError(t, err, "Unexpected error")
-	assert.Equal(t, -1.5, cb.factor, "Unexpected reference factor")
+	assert.Equal(t, float64(0), cb.fuse, "Unexpected reference factor")
 }

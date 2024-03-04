@@ -58,8 +58,8 @@ func (b *GoogleBreaker) history() (float64, uint64, error) {
 	return b.rwin.Sum() // 返回滚动窗口的和
 }
 
-// Accept 接受一个执行。
-// Accept accepts a execution.
+// Accept 接受一个执行。 ratio 是一个随机浮点数，用于模拟接受执行的概率。
+// Accept accepts a execution. ratio is a random float64 used to simulate the probability of accepting the execution.
 func (b *GoogleBreaker) accept(ratio float64) error {
 	// 获取熔断器的历史状态。
 	// Get the history state of the breaker.
