@@ -40,7 +40,7 @@ go get github.com/itzmanish/tripwire
 
 `tripwire` is very simple to use. Just one line of code can be used to retry a function call.
 
-## Config
+## 1. Config
 
 `tripwire` has a config object, which can be used to configure the execute behavior. The config object has the following fields:
 
@@ -130,7 +130,22 @@ Retry = interface {
 }
 ```
 
-## Methods
+## 2. Components
+
+The `tripwire` library has the following components:
+
+### 2.1. GoogleBreaker
+
+`GoogleBreaker` is a circuit breaker module that implements the `Breaker` interface. It is based on Google's SRE principles and is designed to protect high-traffic systems by preemptively disconnecting failing services and reconnecting them when they become healthy.
+
+#### Config
+
+-   `WithCallback`: Set the callback object. Default is `DefaultConfig`.
+-   `WithK`: Set the k value of the configuration. Default is `DefaultKValue`.
+-   `WithProtected`: Set the protected value of the configuration. Default is `DefaultProtected`.
+-   `WithStateWindow`: Set the state window of the configuration. Default is `DefaultStateWindow`.
+
+#### Methods
 
 -   `New`: Create a new tripwire object.
 -   `Stop`: Stop the circuit breaker operation.
@@ -139,11 +154,20 @@ Retry = interface {
 -   `DoWithAcceptable`: Execute a function with an acceptable function.
 -   `Do`: Execute a function.
 
-## Examples
+## 3. Methods
+
+-   `New`: Create a new tripwire object.
+-   `Stop`: Stop the circuit breaker operation.
+-   `DoWithFallbackAcceptable`: Execute a function with fallback and acceptable functions.
+-   `DoWithFallback`: Execute a function with a fallback function.
+-   `DoWithAcceptable`: Execute a function with an acceptable function.
+-   `Do`: Execute a function.
+
+## 4. Examples
 
 The code of examples are in the `examples` directory.
 
-### Empty Retry
+### 4.1 Empty Retry
 
 ```go
 package main
@@ -366,7 +390,7 @@ OnSuccess: <nil>
 #Case6: Idle for 5 seconds, successful execution.
 ```
 
-### Retry module
+### 4.2 Retry module
 
 ```go
 package main
@@ -624,5 +648,5 @@ OnSuccess: <nil>
 
 # Thanks to
 
-- [gobreaker](https://github.com/sony/gobreaker)
-- [go-zero](https://github.com/zeromicro/go-zero)
+-   [gobreaker](https://github.com/sony/gobreaker)
+-   [go-zero](https://github.com/zeromicro/go-zero)
