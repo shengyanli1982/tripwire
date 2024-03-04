@@ -33,19 +33,19 @@ The `tripwire` library offers the following features:
 # Installation
 
 ```bash
-go get github.com/itzmanish/tripwire
+go get github.com/shengyanli1982/tripwire
 ```
 
 # Quick Start
 
-`tripwire` is very simple to use. Just one line of code can be used to retry a function call.
+`tripwire` is very simple to use. Just few lines of code to get started.
 
 ## 1. Config
 
-`tripwire` has a config object, which can be used to configure the execute behavior. The config object has the following fields:
+`tripwire` has a config object, which can be used to register the circuit breaker and retry modules. The config object has the following fields:
 
--   `WithBreaker`: Use a circuit breaker module as long as the module implements a specific internal interface `"Breaker"`. Default is `GoogleBreaker`.
--   `WithRetry`: Use a retry module as long as the module implements a specific internal interface `"Retry"`. Default is `emptyRetry`.
+-   `WithBreaker`: Use a circuit breaker module implementing the `Breaker` interface. Default is `GoogleBreaker`.
+-   `WithRetry`: Use a retry module implementing the `Retry` interface. Default is `emptyRetry`.
 
 > [!TIP]
 > If you want to use a custom circuit breaker or retry module, you can implement the specific internal interface and pass it to the config object.
@@ -183,7 +183,7 @@ The `tripwire` provides the following methods:
 
 ## 4. Examples
 
-The code of examples are in the `examples` directory.
+Example code is located in the `examples` directory.
 
 ### 4.1 Empty Retry
 
