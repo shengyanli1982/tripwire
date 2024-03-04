@@ -20,7 +20,7 @@ Designed to be simple, easy to use, and highly configurable, `tripwire` allows d
 
 But why do we need another circuit breaker project? While there are already many circuit breaker projects available on GitHub, they often fall into two categories: either too complex to understand or too simple to use. `tripwire` bridges this gap by providing a powerful yet user-friendly circuit breaker solution.
 
-## Features
+### Features
 
 The `tripwire` library offers the following features:
 
