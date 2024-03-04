@@ -31,6 +31,14 @@ func (c *CircuitBreaker) Stop() {
 	})
 }
 
+// Allow 方法手动操作熔断器是否允许请求通过 (纯手动，不建议使用)
+// The Allow method manually operates whether the circuit breaker allows requests to pass through (pure manual, not recommended)
+func (c *CircuitBreaker) Allow() (com.Notifier, error) {
+	// 调用配置中的熔断器的 Allow 方法
+	// Call the Allow method of the breaker in the configuration
+	return c.config.breaker.Allow()
+}
+
 // DoWithFallbackAcceptable 使用回退和可接受函数执行函数
 // DoWithFallbackAcceptable executes the function with fallback and acceptable functions
 func (c *CircuitBreaker) DoWithFallbackAcceptable(fn com.HandleFunc, fallback com.FallbackFunc, acceptable com.AcceptableFunc) error {

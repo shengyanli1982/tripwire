@@ -162,8 +162,8 @@ As usual: **k = 1.5**, **protected = 5**, **stateWindow = 10s**
 
 #### 2.1.2. Methods
 
--   `New`: Create a new tripwire object.
--   `Stop`: Stop the circuit breaker operation.
+-   `NewGoogleBreaker`: Create a new google breaker object.
+-   `Stop`: Stop the google breaker operation.
 -   `DoWithFallbackAcceptable`: Execute a function with fallback and acceptable functions.
 -   `DoWithFallback`: Execute a function with a fallback function.
 -   `DoWithAcceptable`: Execute a function with an acceptable function.
@@ -171,12 +171,15 @@ As usual: **k = 1.5**, **protected = 5**, **stateWindow = 10s**
 
 ## 3. Methods
 
+The `tripwire` provides the following methods:
+
 -   `New`: Create a new tripwire object.
 -   `Stop`: Stop the circuit breaker operation.
 -   `DoWithFallbackAcceptable`: Execute a function with fallback and acceptable functions.
 -   `DoWithFallback`: Execute a function with a fallback function.
 -   `DoWithAcceptable`: Execute a function with an acceptable function.
 -   `Do`: Execute a function.
+-   `Allow`: Check if the circuit breaker allows the execution. **Pure manual, not recommended**
 
 ## 4. Examples
 
