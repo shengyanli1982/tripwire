@@ -47,3 +47,9 @@ func TestUtils_Round(t *testing.T) {
 		assert.Equal(t, test.expected, result, "Round(%f, %d) = %f, expected %f", test.f, test.n, result, test.expected)
 	}
 }
+
+func BenchmarkUtils_Round(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		Round(1.23456789, 4)
+	}
+}

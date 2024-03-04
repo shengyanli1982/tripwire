@@ -6,6 +6,7 @@ import (
 
 	com "github.com/shengyanli1982/tripwire/common"
 	rw "github.com/shengyanli1982/tripwire/internal/rolling"
+	"github.com/shengyanli1982/tripwire/internal/utils"
 )
 
 const (
@@ -67,25 +68,28 @@ func (b *GoogleBreaker) accept(ratio float64) error {
 		return err
 	}
 
+	// 计算失败比率。
+	// Calculate the failure ratio.
+	failureRatio := utils.Round(math.Max(0, (float64(total)-accepted)/float64(total+1)), DefaultFloatingPrecision)
+
 	// 计算加权接受。
 	// Calculate the weighted accepts.
 	weightedAcceptes := b.config.k * accepted
 
 	// 计算熔丝比率。
 	// Calculate the fuse ratio.
-	refFactor := (float64(int64(total)-int64(b.config.protected)) - weightedAcceptes) / float64(total+1)
-	fuseRatio := math.Max(0, refFactor)
+	fuseRatio := utils.Round(math.Max(0, (float64(int64(total)-int64(b.config.protected))-weightedAcceptes)/float64(total+1)), DefaultFloatingPrecision)
 
 	// 如果熔丝比率小于或等于0，或者熔丝比率大于等于0和1之间的随机浮点数，返回nil。
 	// If the fuse ratio is less than or equal to 0, or if the fuse ratio is greater than or equal a random float64 between 0 and 1, return nil.
 	if fuseRatio <= 0 || ratio >= fuseRatio {
-		b.config.callback.OnAccept(nil, refFactor)
+		b.config.callback.OnAccept(nil, fuseRatio, failureRatio)
 		return nil
 	}
 
 	// 如果熔丝比率大于随机浮点数，返回服务不可用的错误。
 	// If the fuse ratio is greater than the random float64, return the error of service unavailable.
-	b.config.callback.OnAccept(com.ErrorServiceUnavailable, refFactor)
+	b.config.callback.OnAccept(com.ErrorServiceUnavailable, fuseRatio, failureRatio)
 	return com.ErrorServiceUnavailable
 }
 

@@ -140,6 +140,20 @@ The `tripwire` library has the following components:
 
 #### Config
 
+**Google Breaker algorithm formula:**
+![gb](./assets/googleBreaker.png)
+
+-   `K`: Adjust thresholds or weights in the fuse decision algorithm, affecting its sensitivity.
+-   `Protected`: Specifies the amount of resources to be protected after the fuse is opened.
+
+**The circuit breaker operates based on the formula mentioned in the code.**
+
+-   Under normal conditions, when the number of requests and accepts are equal, there is no rejection and no circuit breaker is triggered.
+-   As the number of accepts decreases, the probability of rejection increases. When the probability exceeds 0, the circuit breaker is triggered. If the number of accepts reaches 0, the circuit breaker is completely open.
+-   When the service becomes healthy again, the number of requests and accepts will increase. However, due to the faster increase of K \* accepts, the probability of rejection quickly returns to 0, effectively closing the circuit breaker.
+
+As usual: **k = 1.5**, **protected = 5**, **stateWindow = 10s**
+
 -   `WithCallback`: Set the callback object. Default is `DefaultConfig`.
 -   `WithK`: Set the k value of the configuration. Default is `DefaultKValue`.
 -   `WithProtected`: Set the protected value of the configuration. Default is `DefaultProtected`.
@@ -204,10 +218,10 @@ func (d *demoCallback) OnFailure(opterr, reason error) {
 	fmt.Printf("OnFailure: %v, %v\n", opterr, reason) // 打印失败消息和原因
 }
 
-// OnAccept 打印接受的原因和因子
-// OnAccept prints the accepted reason and factor
-func (d *demoCallback) OnAccept(reason error, factor float64) {
-	fmt.Printf("OnAccept: %v, %v\n", reason, factor) // 打印接受原因和因子
+// OnAccept 方法在接受时被调用，打印接受的原因和熔断器比例，以及失败比例。
+// The OnAccept method is called when accepted, printing the accepted reason, fuse ratio, and failure ratio.
+func (d *demoCallback) OnAccept(reason error, fuse, failure float64) {
+	fmt.Printf("OnAccept: %v, fuse ratio: %v, failure ratio %v\n", reason, fuse, failure)
 }
 
 func main() {
@@ -310,82 +324,82 @@ func main() {
 
 ```bash
 $ go run demo.go
-OnAccept: <nil>, -5
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -2.75
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -2
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.625
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.4
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.25
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.1428571428571428
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.0625
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -0.95
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -0.9090909090909091
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
 #Case1: Successful execution with default.
-OnAccept: <nil>, -0.875
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnFailure: <nil>, execution error
 #Case2: Unexpected error: execution error
-OnAccept: <nil>, -0.7307692307692307
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.077
 OnFailure: <nil>, execution error
 #Case3: Unexpected error: execution error
-OnAccept: <nil>, -0.6071428571428571
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.143
 OnSuccess: <nil>
 #Case4: Failed execution with acceptable.
-OnAccept: <nil>, -0.6
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.133
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.5
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.188
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.4117647058823529
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.235
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.3333333333333333
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.278
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.2631578947368421
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.316
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.2
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.35
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.14285714285714285
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.381
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.09090909090909091
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.409
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.043478260869565216
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.435
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.458
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.04
+OnAccept: <nil>, fuse ratio: 0.04, failure ratio 0.48
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.07692307692307693
+OnAccept: <nil>, fuse ratio: 0.077, failure ratio 0.5
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.1111111111111111
+OnAccept: <nil>, fuse ratio: 0.111, failure ratio 0.519
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.14285714285714285
+OnAccept: <nil>, fuse ratio: 0.143, failure ratio 0.536
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.1724137931034483
+OnAccept: service unavailable, fuse ratio: 0.172, failure ratio 0.552
+OnFailure: <nil>, service unavailable
+OnAccept: <nil>, fuse ratio: 0.2, failure ratio 0.567
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.2
+OnAccept: <nil>, fuse ratio: 0.226, failure ratio 0.581
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.22580645161290322
+OnAccept: <nil>, fuse ratio: 0.25, failure ratio 0.594
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.25
+OnAccept: service unavailable, fuse ratio: 0.273, failure ratio 0.606
+OnFailure: <nil>, service unavailable
+OnAccept: <nil>, fuse ratio: 0.294, failure ratio 0.618
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.2727272727272727
-OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.29411764705882354
-OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.3142857142857143
-OnFailure: <nil>, execution error
-#Case5: Unexpected error: execution error
-OnAccept: <nil>, 0.3333333333333333
+OnAccept: service unavailable, fuse ratio: 0.314, failure ratio 0.629
+OnFailure: <nil>, service unavailable
+#Case5: Unexpected error: fallback error
+OnAccept: <nil>, fuse ratio: 0.333, failure ratio 0.639
 OnSuccess: <nil>
 #Case6: Idle for 5 seconds, successful execution.
 ```
@@ -428,10 +442,10 @@ func (d *demoCallback) OnFailure(opterr, reason error) {
 	fmt.Printf("OnFailure: %v, %v\n", opterr, reason) // 打印失败消息和原因
 }
 
-// OnAccept 打印接受的原因和因子
-// OnAccept prints the accepted reason and factor
-func (d *demoCallback) OnAccept(reason error, factor float64) {
-	fmt.Printf("OnAccept: %v, %v\n", reason, factor) // 打印接受原因和因子
+// OnAccept 方法在接受时被调用，打印接受的原因和熔断器比例，以及失败比例。
+// The OnAccept method is called when accepted, printing the accepted reason, fuse ratio, and failure ratio.
+func (d *demoCallback) OnAccept(reason error, fuse, failure float64) {
+	fmt.Printf("OnAccept: %v, fuse ratio: %v, failure ratio %v\n", reason, fuse, failure)
 }
 
 func main() {
@@ -527,121 +541,121 @@ func main() {
 	} else {
 		fmt.Printf("#Case6: Idle for 5 seconds, successful execution.\n") // 如果没有错误，打印成功消息
 	}
-}
+
 ```
 
 **Result**
 
 ```bash
 $ go run demo.go
-OnAccept: <nil>, -5
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -2.75
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -2
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.625
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.4
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.25
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.1428571428571428
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1.0625
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -1
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -0.95
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
-OnAccept: <nil>, -0.9090909090909091
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnSuccess: <nil>
 #Case1: Successful execution with default.
-OnAccept: <nil>, -0.875
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.7307692307692307
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.077
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.6071428571428571
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.143
 OnFailure: <nil>, execution error
 #Case2: Unexpected error: retry attempts exceeded
-OnAccept: <nil>, -0.5
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.2
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.4
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.25
 OnFailure: <nil>, execution error
-OnAccept: <nil>, -0.2857142857142857
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.333
 OnFailure: <nil>, execution error
 #Case3: Unexpected error: retry attempts exceeded
-OnAccept: <nil>, -0.17857142857142858
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.4
 OnSuccess: <nil>
 #Case4: Failed execution with acceptable.
-OnAccept: <nil>, -0.17857142857142858
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.4
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.5
 OnFailure: <nil>, execution error
-OnAccept: service unavailable, 0.18181818181818182
+OnAccept: <nil>, fuse ratio: 0.125, failure ratio 0.667
+OnFailure: <nil>, execution error
+OnAccept: <nil>, fuse ratio: 0.25, failure ratio 0.75
+OnFailure: <nil>, execution error
+OnAccept: <nil>, fuse ratio: 0.318, failure ratio 0.818
+OnFailure: <nil>, execution error
+OnAccept: service unavailable, fuse ratio: 0.318, failure ratio 0.818
 OnFailure: <nil>, service unavailable
-OnAccept: <nil>, 0.3181818181818182
-OnFailure: <nil>, execution error
-OnAccept: service unavailable, 0.3181818181818182
+OnAccept: service unavailable, fuse ratio: 0.375, failure ratio 0.833
 OnFailure: <nil>, service unavailable
-OnAccept: service unavailable, 0.3181818181818182
+OnAccept: service unavailable, fuse ratio: 0.318, failure ratio 0.818
 OnFailure: <nil>, service unavailable
-OnAccept: <nil>, 0.3181818181818182
+OnAccept: <nil>, fuse ratio: 0.318, failure ratio 0.818
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.3181818181818182
+OnAccept: <nil>, fuse ratio: 0.375, failure ratio 0.833
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.3181818181818182
-OnFailure: <nil>, execution error
-OnAccept: service unavailable, 0.3181818181818182
+OnAccept: service unavailable, fuse ratio: 0.455, failure ratio 0.909
 OnFailure: <nil>, service unavailable
-OnAccept: <nil>, 0.4
+OnAccept: <nil>, fuse ratio: 0.4, failure ratio 0.9
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.45454545454545453
+OnAccept: <nil>, fuse ratio: 0.455, failure ratio 0.909
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.45454545454545453
-OnFailure: <nil>, execution error
-OnAccept: service unavailable, 0.5
+OnAccept: service unavailable, fuse ratio: 0.4, failure ratio 0.9
 OnFailure: <nil>, service unavailable
-OnAccept: <nil>, 0.4
+OnAccept: <nil>, fuse ratio: 0.25, failure ratio 0.875
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.45454545454545453
-OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.5
-OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.45454545454545453
-OnFailure: <nil>, execution error
-OnAccept: service unavailable, 0.5
+OnAccept: service unavailable, fuse ratio: 0.333, failure ratio 0.889
 OnFailure: <nil>, service unavailable
-OnAccept: <nil>, 0.5
+OnAccept: <nil>, fuse ratio: 0.333, failure ratio 0.889
 OnFailure: <nil>, execution error
-OnAccept: service unavailable, 0.45454545454545453
+OnAccept: <nil>, fuse ratio: 0.25, failure ratio 0.875
+OnFailure: <nil>, execution error
+OnAccept: service unavailable, fuse ratio: 0.333, failure ratio 0.889
 OnFailure: <nil>, service unavailable
-OnAccept: service unavailable, 0.5
+OnAccept: service unavailable, fuse ratio: 0.333, failure ratio 0.889
 OnFailure: <nil>, service unavailable
-OnAccept: service unavailable, 0.5
+OnAccept: <nil>, fuse ratio: 0.333, failure ratio 0.889
+OnFailure: <nil>, execution error
+OnAccept: <nil>, fuse ratio: 0.333, failure ratio 0.889
+OnFailure: <nil>, execution error
+OnAccept: service unavailable, fuse ratio: 0.4, failure ratio 0.9
 OnFailure: <nil>, service unavailable
-OnAccept: <nil>, 0.45454545454545453
+OnAccept: <nil>, fuse ratio: 0.4, failure ratio 0.9
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.45454545454545453
+OnAccept: <nil>, fuse ratio: 0.455, failure ratio 0.909
 OnFailure: <nil>, execution error
-OnAccept: service unavailable, 0.5
+OnAccept: <nil>, fuse ratio: 0.455, failure ratio 0.909
+OnFailure: <nil>, execution error
+OnAccept: service unavailable, fuse ratio: 0.333, failure ratio 0.889
 OnFailure: <nil>, service unavailable
-OnAccept: <nil>, 0.5
+OnAccept: <nil>, fuse ratio: 0.333, failure ratio 0.889
 OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.5
-OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.5
-OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.45454545454545453
-OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.5
-OnFailure: <nil>, execution error
-OnAccept: <nil>, 0.5
-OnFailure: <nil>, execution error
-OnAccept: service unavailable, 0.45454545454545453
+OnAccept: service unavailable, fuse ratio: 0.4, failure ratio 0.9
 OnFailure: <nil>, service unavailable
+OnAccept: <nil>, fuse ratio: 0.4, failure ratio 0.9
+OnFailure: <nil>, execution error
+OnAccept: service unavailable, fuse ratio: 0.4, failure ratio 0.9
+OnFailure: <nil>, service unavailable
+OnAccept: service unavailable, fuse ratio: 0.333, failure ratio 0.889
+OnFailure: <nil>, service unavailable
+OnAccept: <nil>, fuse ratio: 0.333, failure ratio 0.889
+OnFailure: <nil>, execution error
 #Case5: Unexpected error: retry attempts exceeded
-OnAccept: <nil>, 0
+OnAccept: <nil>, fuse ratio: 0, failure ratio 0.8
 OnSuccess: <nil>
 #Case6: Idle for 5 seconds, successful execution.
 ```

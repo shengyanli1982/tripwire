@@ -291,8 +291,8 @@ func (t *testCallback) OnFailure(opterr, reason error) {
 	t.fc += 1
 }
 
-func (t *testCallback) OnAccept(reason error, refFactor float64) {
-	t.factor = refFactor
+func (t *testCallback) OnAccept(reason error, fuse, failure float64) {
+	t.factor = fuse
 }
 
 func newTestCallback() Callback {

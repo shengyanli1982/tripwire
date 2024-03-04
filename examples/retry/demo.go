@@ -33,10 +33,10 @@ func (d *demoCallback) OnFailure(opterr, reason error) {
 	fmt.Printf("OnFailure: %v, %v\n", opterr, reason) // 打印失败消息和原因
 }
 
-// OnAccept 打印接受的原因和因子
-// OnAccept prints the accepted reason and factor
-func (d *demoCallback) OnAccept(reason error, factor float64) {
-	fmt.Printf("OnAccept: %v, %v\n", reason, factor) // 打印接受原因和因子
+// OnAccept 方法在接受时被调用，打印接受的原因和熔断器比例，以及失败比例。
+// The OnAccept method is called when accepted, printing the accepted reason, fuse ratio, and failure ratio.
+func (d *demoCallback) OnAccept(reason error, fuse, failure float64) {
+	fmt.Printf("OnAccept: %v, fuse ratio: %v, failure ratio %v\n", reason, fuse, failure)
 }
 
 func main() {
