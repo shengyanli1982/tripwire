@@ -141,6 +141,7 @@ The `tripwire` library has the following components:
 #### Config
 
 **Google Breaker algorithm formula:**
+
 ![gb](./assets/googleBreaker.png)
 
 -   `K`: Adjust thresholds or weights in the fuse decision algorithm, affecting its sensitivity.
