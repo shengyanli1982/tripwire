@@ -18,4 +18,9 @@
 # vendor/
 
 # Go workspace file
-go.work
+# go.work
+go.work.sum
+
+.idea/
+.vscode/
+.DS_Store
