@@ -47,7 +47,7 @@ go get github.com/itzmanish/tripwire
 -   `WithBreaker`: Use a circuit breaker module as long as the module implements a specific internal interface `"Breaker"`. Default is `GoogleBreaker`.
 -   `WithRetry`: Use a retry module as long as the module implements a specific internal interface `"Retry"`. Default is `emptyRetry`.
 
-> [!TIPS]
+> [!TIP]
 > If you want to use a custom circuit breaker or retry module, you can implement the specific internal interface and pass it to the config object.
 
 **Breaker Interface:**
