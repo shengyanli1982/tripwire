@@ -138,7 +138,7 @@ The `tripwire` library has the following components:
 
 `GoogleBreaker` is a circuit breaker module that implements the `Breaker` interface. It is based on Google's SRE principles and is designed to protect high-traffic systems by preemptively disconnecting failing services and reconnecting them when they become healthy.
 
-#### Config
+#### 2.1.1. Config
 
 **Google Breaker algorithm formula:**
 
@@ -160,7 +160,7 @@ As usual: **k = 1.5**, **protected = 5**, **stateWindow = 10s**
 -   `WithProtected`: Set the protected value of the configuration. Default is `DefaultProtected`.
 -   `WithStateWindow`: Set the state window of the configuration. Default is `DefaultStateWindow`.
 
-#### Methods
+#### 2.1.2. Methods
 
 -   `New`: Create a new tripwire object.
 -   `Stop`: Stop the circuit breaker operation.
