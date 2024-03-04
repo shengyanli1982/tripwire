@@ -120,9 +120,9 @@ func main() {
 		fmt.Printf("#Case5: Failed execution with fallback.\n") // 如果没有错误，打印执行失败的消息
 	}
 
-	// 案例6：空闲15秒，成功执行。
-	// Case 6: Idle for 15 seconds, successful execution.
-	time.Sleep(15 * time.Second) // 等待15秒
+	// 案例6：空闲5秒，成功执行。
+	// Case 6: Idle for 5 seconds, successful execution.
+	time.Sleep(5 * time.Second) // 等待5秒
 	fn = func() error {
 		return nil // 返回nil表示成功
 	}
@@ -130,6 +130,6 @@ func main() {
 	if err != nil {
 		fmt.Printf("#Case6: Unexpected error: %v\n", err) // 如果有错误，打印错误
 	} else {
-		fmt.Printf("#Case6: Idle for 15 seconds, successful execution.\n") // 如果没有错误，打印成功消息
+		fmt.Printf("#Case6: Idle for 5 seconds, successful execution.\n") // 如果没有错误，打印成功消息
 	}
 }

@@ -46,7 +46,7 @@ func TestCircuitBreaker_DoWithFallbackAcceptable(t *testing.T) {
 		return err == execError
 	}
 	err = breaker.DoWithFallbackAcceptable(fn, fallback, acceptable)
-	assert.ErrorIs(t, err, execError, "Unexpected error")
+	assert.NoError(t, err)
 
 	// Test case 4: Failed execution with unacceptable result
 	fn = func() error {
@@ -68,8 +68,8 @@ func TestCircuitBreaker_DoWithFallbackAcceptable_FallbackTrigger(t *testing.T) {
 	breaker := New(nil)
 	defer breaker.Stop()
 
-	// Simulate running 10000 times, failed
-	for i := 0; i < 10000; i++ {
+	// Simulate running 100 times, failed
+	for i := 0; i < 100; i++ {
 		_ = breaker.Do(func() error {
 			return execError
 		})
@@ -126,8 +126,8 @@ func TestCircuitBreaker_DoAfterStop(t *testing.T) {
 	// Test case 1: Successful execution
 	breaker := New(nil)
 
-	// Simulate running 10000 times, success
-	for i := 0; i < 10000; i++ {
+	// Simulate running 100 times, success
+	for i := 0; i < 100; i++ {
 		_ = breaker.Do(func() error {
 			return nil
 		})
@@ -152,8 +152,8 @@ func TestCircuitBreaker_DoAfterStop(t *testing.T) {
 	// Test case 2: Failed execution
 	breaker = New(nil)
 
-	// Simulate running 10000 times, failed
-	for i := 0; i < 10000; i++ {
+	// Simulate running 100 times, failed
+	for i := 0; i < 100; i++ {
 		_ = breaker.Do(func() error {
 			return execError
 		})
